@@ -104,4 +104,4 @@ server {
 
 ## Licença
 
-Projeto proprietário. Todos os direitos reservados.
+Projeto proprietário. Todos os direitos reservados. Consulte o arquivo [LICENSE](LICENSE).
