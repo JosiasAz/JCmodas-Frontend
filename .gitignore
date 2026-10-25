@@ -42,3 +42,6 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Gerado no build a partir da variável API_URL (scripts/set-api-url.mjs)
+/src/environments/environment.production.ts
