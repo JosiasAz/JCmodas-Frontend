@@ -6,6 +6,7 @@ import { MoneyPipe } from '../shared/money.pipe';
 import { CrudPage } from './crud-page';
 import { ImageInput } from './image-input';
 import { Pager } from './pager';
+import { ImgPipe } from '../shared/img.pipe';
 
 const GRIDS = [
   { label: 'P ao GG', sizes: ['P', 'M', 'G', 'GG'] },
@@ -16,7 +17,7 @@ const GRIDS = [
 
 @Component({
   selector: 'app-products',
-  imports: [FormsModule, Icon, MoneyPipe, ImageInput, Pager],
+  imports: [FormsModule, Icon, MoneyPipe, ImageInput, Pager, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './products.html',
   styles: `

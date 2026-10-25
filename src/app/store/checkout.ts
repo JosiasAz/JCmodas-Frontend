@@ -10,12 +10,13 @@ import { StoreService } from '../core/store.service';
 import { Icon } from '../shared/icon';
 import { MoneyPipe } from '../shared/money.pipe';
 import { CartTotals } from './cart-totals';
+import { ImgPipe } from '../shared/img.pipe';
 
 const FORM_KEY = 'jc-checkout-form';
 
 @Component({
   selector: 'app-checkout',
-  imports: [FormsModule, RouterLink, Icon, MoneyPipe, CartTotals],
+  imports: [FormsModule, RouterLink, Icon, MoneyPipe, CartTotals, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss',

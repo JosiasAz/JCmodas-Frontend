@@ -4,17 +4,18 @@ import { AdminApiService } from '../core/admin-api.service';
 import { errorMessage } from '../core/auth';
 import { ToastService } from '../core/toast.service';
 import { Icon } from '../shared/icon';
+import { ImgPipe } from '../shared/img.pipe';
 
 /** Envio de imagem do computador/celular ou URL colada. */
 @Component({
   selector: 'app-image-input',
-  imports: [FormsModule, Icon],
+  imports: [FormsModule, Icon, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="image-input">
       @if (value() && !multiple()) {
         <div class="preview">
-          <img [src]="value()" alt="" />
+          <img [src]="value() | img" alt="" />
           <button type="button" class="icon-btn" (click)="value.set(null)" aria-label="Remover imagem"><app-icon name="x" [size]="16" /></button>
         </div>
       }

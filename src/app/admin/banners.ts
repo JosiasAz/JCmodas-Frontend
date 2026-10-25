@@ -5,6 +5,7 @@ import { Icon } from '../shared/icon';
 import { CrudPage, fromLocalInput, toLocalInput } from './crud-page';
 import { ImageInput } from './image-input';
 import { Pager } from './pager';
+import { ImgPipe } from '../shared/img.pipe';
 
 const PLACEMENTS: { value: BannerPlacement; label: string; hint: string }[] = [
   { value: 'hero', label: 'Carrossel do topo', hint: 'Banner grande, o primeiro que o cliente vê' },
@@ -23,7 +24,7 @@ const PALETTES = [
 
 @Component({
   selector: 'app-banners',
-  imports: [FormsModule, Icon, ImageInput, Pager],
+  imports: [FormsModule, Icon, ImageInput, Pager, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page-head">
@@ -40,7 +41,7 @@ const PALETTES = [
           <div class="mini" [style.background]="b.bg_color" [style.color]="b.text_color">
             <div><strong>{{ b.title }}</strong><span>{{ b.subtitle }}</span></div>
             @if (b.image) {
-              <img [src]="b.image" alt="" />
+              <img [src]="b.image | img" alt="" />
             }
           </div>
           <div class="meta">
@@ -73,7 +74,7 @@ const PALETTES = [
               <em [style.background]="d.text_color" [style.color]="d.bg_color">{{ d.cta_label || 'Ver agora' }}</em>
             </div>
             @if (d.image && d.placement !== 'strip') {
-              <img [src]="d.image" alt="" />
+              <img [src]="d.image | img" alt="" />
             }
           </div>
 

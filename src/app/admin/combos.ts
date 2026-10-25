@@ -6,10 +6,11 @@ import { MoneyPipe } from '../shared/money.pipe';
 import { CrudPage } from './crud-page';
 import { ImageInput } from './image-input';
 import { Pager } from './pager';
+import { ImgPipe } from '../shared/img.pipe';
 
 @Component({
   selector: 'app-admin-combos',
-  imports: [FormsModule, Icon, MoneyPipe, ImageInput, Pager],
+  imports: [FormsModule, Icon, MoneyPipe, ImageInput, Pager, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page-head">
@@ -28,7 +29,7 @@ import { Pager } from './pager';
             <tr>
               <td>
                 @if (c.image) {
-                  <img class="thumb" [src]="c.image" alt="" />
+                  <img class="thumb" [src]="c.image | img" alt="" />
                 }
               </td>
               <td><b>{{ c.name }}</b></td>

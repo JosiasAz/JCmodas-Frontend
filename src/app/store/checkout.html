@@ -163,7 +163,7 @@
           @for (line of q.lines; track line.key) {
             <li>
               @if (line.image) {
-                <img [src]="line.image" alt="" />
+                <img [src]="line.image | img" alt="" />
               }
               <div>
                 <strong>{{ line.quantity }}x {{ line.name }}</strong>

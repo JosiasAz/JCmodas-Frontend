@@ -3,18 +3,19 @@ import { RouterLink } from '@angular/router';
 import { Product } from '../core/models';
 import { StoreService } from '../core/store.service';
 import { MoneyPipe } from './money.pipe';
+import { ImgPipe } from './img.pipe';
 
 @Component({
   selector: 'app-product-card',
-  imports: [RouterLink, MoneyPipe],
+  imports: [RouterLink, MoneyPipe, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @let p = product();
     <a class="card" [routerLink]="['/produto', p.slug]" [class.soldout]="p.stock === 0">
       <div class="media">
-        <img [src]="p.images[0]" [alt]="p.name" loading="lazy" />
+        <img [src]="p.images[0] | img" [alt]="p.name" loading="lazy" />
         @if (p.images[1]) {
-          <img class="alt" [src]="p.images[1]" alt="" loading="lazy" />
+          <img class="alt" [src]="p.images[1] | img" alt="" loading="lazy" />
         }
         <div class="badges">
           @if (p.discount_percent) {

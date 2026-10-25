@@ -15,7 +15,7 @@
               </app-banner-link>
             </div>
             @if (b.image) {
-              <img [src]="b.image" [alt]="b.title" class="art" />
+              <img [src]="b.image | img" [alt]="b.title" class="art" />
             }
           </div>
         </div>
@@ -76,7 +76,7 @@
           <a [routerLink]="'/loja'" [queryParams]="{ categoria: c.slug }" class="category">
             <span class="cat-img">
               @if (c.image) {
-                <img [src]="c.image" [alt]="c.name" loading="lazy" />
+                <img [src]="c.image | img" [alt]="c.name" loading="lazy" />
               }
             </span>
             <span>{{ c.name }}</span>
@@ -116,7 +116,7 @@
               <span class="cta">{{ b.cta_label }} <app-icon name="arrow" [size]="16" /></span>
             </div>
             @if (b.image) {
-              <img [src]="b.image" alt="" />
+              <img [src]="b.image | img" alt="" />
             }
           </div>
         </app-banner-link>
@@ -139,7 +139,7 @@
           <a routerLink="/combos" [fragment]="c.slug" class="combo">
             <div class="combo-img">
               @if (c.image) {
-                <img [src]="c.image" [alt]="c.name" loading="lazy" />
+                <img [src]="c.image | img" [alt]="c.name" loading="lazy" />
               }
               @if (c.savings) {
                 <span class="badge sale">Economize {{ c.savings | money }}</span>

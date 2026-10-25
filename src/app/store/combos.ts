@@ -7,6 +7,7 @@ import { Combo, Product } from '../core/models';
 import { ToastService } from '../core/toast.service';
 import { Icon } from '../shared/icon';
 import { MoneyPipe } from '../shared/money.pipe';
+import { ImgPipe } from '../shared/img.pipe';
 
 /** Uma peça do combo para o cliente escolher o tamanho (combo de 3 camisetas = 3 peças). */
 interface Piece {
@@ -16,7 +17,7 @@ interface Piece {
 
 @Component({
   selector: 'app-combos',
-  imports: [FormsModule, RouterLink, Icon, MoneyPipe],
+  imports: [FormsModule, RouterLink, Icon, MoneyPipe, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="container page">
@@ -31,7 +32,7 @@ interface Piece {
           <article class="combo card" [id]="c.slug">
             <div class="media">
               @if (c.image) {
-                <img [src]="c.image" [alt]="c.name" />
+                <img [src]="c.image | img" [alt]="c.name" />
               }
               @if (c.savings) {
                 <span class="badge sale">Economize {{ c.savings | money }}</span>
@@ -45,7 +46,7 @@ interface Piece {
               <div class="pieces">
                 @for (piece of pieces()[c.id]; track $index) {
                   <div class="piece">
-                    <img [src]="piece.product.images[0]" alt="" />
+                    <img [src]="piece.product.images[0] | img" alt="" />
                     <div class="piece-info">
                       <a [routerLink]="['/produto', piece.product.slug]">{{ piece.product.name }}</a>
                       <span class="muted small">Avulso: {{ piece.product.final_price | money }}</span>

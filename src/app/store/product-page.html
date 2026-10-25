@@ -15,12 +15,12 @@
         <div class="thumbs">
           @for (img of p.images; track img; let i = $index) {
             <button [class.on]="i === image()" (click)="image.set(i)" [attr.aria-label]="'Foto ' + (i + 1)">
-              <img [src]="img" alt="" />
+              <img [src]="img | img" alt="" />
             </button>
           }
         </div>
         <div class="photo">
-          <img [src]="p.images[image()]" [alt]="p.name" />
+          <img [src]="p.images[image()] | img" [alt]="p.name" />
           <div class="badges">
             @if (p.discount_percent) {
               <span class="badge sale">-{{ p.discount_percent }}%</span>

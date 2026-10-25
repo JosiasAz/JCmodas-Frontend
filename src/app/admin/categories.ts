@@ -5,10 +5,11 @@ import { Icon } from '../shared/icon';
 import { CrudPage } from './crud-page';
 import { ImageInput } from './image-input';
 import { Pager } from './pager';
+import { ImgPipe } from '../shared/img.pipe';
 
 @Component({
   selector: 'app-categories',
-  imports: [FormsModule, Icon, ImageInput, Pager],
+  imports: [FormsModule, Icon, ImageInput, Pager, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page-head">
@@ -27,7 +28,7 @@ import { Pager } from './pager';
             <tr>
               <td>
                 @if (c.image) {
-                  <img class="thumb" [src]="c.image" alt="" style="border-radius: 50%; width: 44px; height: 44px" />
+                  <img class="thumb" [src]="c.image | img" alt="" style="border-radius: 50%; width: 44px; height: 44px" />
                 }
               </td>
               <td><b>{{ c.name }}</b><br /><span class="muted small">/loja?categoria={{ c.slug }}</span></td>

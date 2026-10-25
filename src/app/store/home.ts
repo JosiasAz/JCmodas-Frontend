@@ -7,10 +7,11 @@ import { BannerLink } from '../shared/banner-link';
 import { Icon } from '../shared/icon';
 import { MoneyPipe } from '../shared/money.pipe';
 import { ProductCard } from '../shared/product-card';
+import { ImgPipe } from '../shared/img.pipe';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Icon, MoneyPipe, ProductCard, BannerLink],
+  imports: [RouterLink, Icon, MoneyPipe, ProductCard, BannerLink, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home.html',
   styleUrl: './home.scss',

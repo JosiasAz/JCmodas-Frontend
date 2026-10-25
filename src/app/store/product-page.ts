@@ -9,13 +9,14 @@ import { ToastService } from '../core/toast.service';
 import { Icon } from '../shared/icon';
 import { MoneyPipe } from '../shared/money.pipe';
 import { ProductCard } from '../shared/product-card';
+import { ImgPipe } from '../shared/img.pipe';
 
 const MIN_INSTALLMENT = 30;
 const LOW_STOCK = 3;
 
 @Component({
   selector: 'app-product-page',
-  imports: [RouterLink, Icon, MoneyPipe, ProductCard],
+  imports: [RouterLink, Icon, MoneyPipe, ProductCard, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-page.html',
   styleUrl: './product-page.scss',

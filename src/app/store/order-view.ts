@@ -2,13 +2,14 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { Order, OrderStatus, PAYMENT_LABEL, STATUS_LABEL } from '../core/models';
 import { MoneyPipe } from '../shared/money.pipe';
+import { ImgPipe } from '../shared/img.pipe';
 
 const FLOW: OrderStatus[] = ['novo', 'pago', 'separando', 'enviado', 'entregue'];
 
 /** Detalhes de um pedido com linha do tempo do status. */
 @Component({
   selector: 'app-order-view',
-  imports: [MoneyPipe, DatePipe],
+  imports: [MoneyPipe, DatePipe, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @let o = order();
@@ -39,7 +40,7 @@ const FLOW: OrderStatus[] = ['novo', 'pago', 'separando', 'enviado', 'entregue']
         @for (item of o.items; track item.id) {
           <li>
             @if (item.image) {
-              <img [src]="item.image" alt="" />
+              <img [src]="item.image | img" alt="" />
             }
             <div>
               <strong>{{ item.quantity }}x {{ item.name }}</strong>
