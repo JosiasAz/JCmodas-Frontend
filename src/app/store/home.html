@@ -1,0 +1,215 @@
+@if (data(); as d) {
+  <!-- carrossel de anúncios -->
+  @if (heroes().length) {
+    <section class="hero">
+      @for (b of heroes(); track b.id; let i = $index) {
+        <div class="slide" [class.active]="i === slide()" [style.background]="b.bg_color" [style.color]="b.text_color">
+          <div class="container slide-inner">
+            <div class="copy">
+              <h1>{{ b.title }}</h1>
+              @if (b.subtitle) {
+                <p>{{ b.subtitle }}</p>
+              }
+              <app-banner-link [link]="b.link" [cls]="'btn lg ' + (b.text_color === '#ffffff' ? 'light' : '')">
+                {{ b.cta_label }} <app-icon name="arrow" [size]="18" />
+              </app-banner-link>
+            </div>
+            @if (b.image) {
+              <img [src]="b.image" [alt]="b.title" class="art" />
+            }
+          </div>
+        </div>
+      }
+      @if (heroes().length > 1) {
+        <button class="arrow left" (click)="prev()" aria-label="Anterior"><app-icon name="left" /></button>
+        <button class="arrow right" (click)="next()" aria-label="Próximo"><app-icon name="right" /></button>
+        <div class="dots">
+          @for (b of heroes(); track b.id; let i = $index) {
+            <button [class.on]="i === slide()" (click)="slide.set(i)" [attr.aria-label]="'Banner ' + (i + 1)"></button>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <!-- loja ainda sem nada cadastrado -->
+  @if (isEmpty()) {
+    <section class="container coming-soon">
+      <img src="logo/jc-logo.svg" alt="JC Moda Masculina" />
+      <h1>Novidades em breve</h1>
+      <p class="muted">Estamos preparando nossa vitrine. Volte logo para conferir as peças.</p>
+      @if (store.settings()?.whatsapp) {
+        <a class="btn whatsapp lg" [href]="whatsappLink()" target="_blank" rel="noopener">
+          <app-icon name="whatsapp" [size]="18" /> Fale com a gente
+        </a>
+      }
+    </section>
+  }
+
+  <!-- vantagens (só as que estão configuradas no painel) -->
+  @if (!isEmpty() && store.settings(); as s) {
+    <section class="perks container">
+      @if (s.free_shipping_min) {
+        <div><app-icon name="truck" [size]="26" /><span><strong>Frete grátis</strong> acima de {{ s.free_shipping_min | money }}</span></div>
+      }
+      @if (s.pix_discount_percent) {
+        <div><app-icon name="pix" [size]="26" /><span><strong>{{ s.pix_discount_percent }}% OFF</strong> pagando no Pix</span></div>
+      }
+      @if (s.max_installments > 1) {
+        <div><app-icon name="card" [size]="26" /><span><strong>Até {{ s.max_installments }}x</strong> sem juros no cartão</span></div>
+      }
+      @if (s.pickup_enabled) {
+        <div><app-icon name="store" [size]="26" /><span><strong>Retire grátis</strong> na loja</span></div>
+      }
+    </section>
+  }
+
+  <!-- categorias -->
+  @if (d.categories.length) {
+    <section class="section container">
+      <div class="section-head">
+        <div><h2>Compre por categoria</h2></div>
+        <a routerLink="/loja">Ver tudo</a>
+      </div>
+      <div class="categories">
+        @for (c of d.categories; track c.id) {
+          <a [routerLink]="'/loja'" [queryParams]="{ categoria: c.slug }" class="category">
+            <span class="cat-img">
+              @if (c.image) {
+                <img [src]="c.image" [alt]="c.name" loading="lazy" />
+              }
+            </span>
+            <span>{{ c.name }}</span>
+          </a>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- ofertas -->
+  @if (d.on_sale.length) {
+    <section class="section container">
+      <div class="section-head">
+        <div>
+          <h2>Ofertas da semana</h2>
+          <p>Descontos aplicados automaticamente, sem precisar de cupom.</p>
+        </div>
+        <a routerLink="/loja" [queryParams]="{ promo: 1 }">Ver promoções</a>
+      </div>
+      <div class="grid-products">
+        @for (p of d.on_sale.slice(0, 8); track p.id) {
+          <app-product-card [product]="p" />
+        }
+      </div>
+    </section>
+  }
+
+  <!-- anúncios em cartão -->
+  @if (d.banners.card.length) {
+    <section class="container promo-cards">
+      @for (b of d.banners.card; track b.id) {
+        <app-banner-link [link]="b.link" cls="promo-card">
+          <div class="promo-card-inner" [style.background]="b.bg_color" [style.color]="b.text_color">
+            <div>
+              <h3>{{ b.title }}</h3>
+              <p>{{ b.subtitle }}</p>
+              <span class="cta">{{ b.cta_label }} <app-icon name="arrow" [size]="16" /></span>
+            </div>
+            @if (b.image) {
+              <img [src]="b.image" alt="" />
+            }
+          </div>
+        </app-banner-link>
+      }
+    </section>
+  }
+
+  <!-- combos -->
+  @if (d.combos.length) {
+    <section class="section container">
+      <div class="section-head">
+        <div>
+          <h2>Combos que valem a pena</h2>
+          <p>Kits prontos com preço fechado. Você escolhe o tamanho de cada peça.</p>
+        </div>
+        <a routerLink="/combos">Ver combos</a>
+      </div>
+      <div class="combos">
+        @for (c of d.combos; track c.id) {
+          <a routerLink="/combos" [fragment]="c.slug" class="combo">
+            <div class="combo-img">
+              @if (c.image) {
+                <img [src]="c.image" [alt]="c.name" loading="lazy" />
+              }
+              @if (c.savings) {
+                <span class="badge sale">Economize {{ c.savings | money }}</span>
+              }
+            </div>
+            <div class="combo-info">
+              <h3>{{ c.name }}</h3>
+              <p class="muted small">{{ c.items.length }} peças · {{ c.description }}</p>
+              <div class="price">
+                <s>{{ c.original_price | money }}</s>
+                <strong>{{ c.price | money }}</strong>
+              </div>
+            </div>
+          </a>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- faixa -->
+  @for (b of d.banners.strip; track b.id) {
+    <section class="strip" [style.background]="b.bg_color" [style.color]="b.text_color">
+      <div class="container strip-inner">
+        <div>
+          <h2>{{ b.title }}</h2>
+          @if (b.subtitle) {
+            <p>{{ b.subtitle }}</p>
+          }
+        </div>
+        <app-banner-link [link]="b.link" [cls]="'btn lg ' + (b.text_color === '#ffffff' ? 'light' : '')">
+          {{ b.cta_label }}
+        </app-banner-link>
+      </div>
+    </section>
+  }
+
+  <!-- mais vendidos -->
+  @if (d.best_sellers.length) {
+    <section class="section container">
+      <div class="section-head">
+        <div><h2>Mais vendidos</h2><p>Os favoritos dos nossos clientes.</p></div>
+        <a routerLink="/loja" [queryParams]="{ ordem: 'best_sellers' }">Ver mais</a>
+      </div>
+      <div class="grid-products">
+        @for (p of d.best_sellers; track p.id) {
+          <app-product-card [product]="p" />
+        }
+      </div>
+    </section>
+  }
+
+  <!-- novidades -->
+  @if (d.new_arrivals.length) {
+    <section class="section container">
+      <div class="section-head">
+        <div><h2>Acabou de chegar</h2></div>
+        <a routerLink="/loja" [queryParams]="{ ordem: 'newest' }">Ver novidades</a>
+      </div>
+      <div class="grid-products">
+        @for (p of d.new_arrivals.slice(0, 4); track p.id) {
+          <app-product-card [product]="p" />
+        }
+      </div>
+    </section>
+  }
+} @else {
+  <div class="skeleton hero-skeleton"></div>
+  <div class="container section grid-products">
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="skeleton" style="aspect-ratio: 4/5"></div>
+    }
+  </div>
+}

@@ -1,0 +1,161 @@
+<div class="page-head">
+  <div>
+    <h1>Produtos</h1>
+    <p class="muted">Cadastre peças, fotos, preços e estoque por tamanho.</p>
+  </div>
+  <button class="btn" (click)="open()"><app-icon name="plus" [size]="18" /> Novo produto</button>
+</div>
+
+<div class="toolbar">
+  <input class="input" placeholder="Buscar produto..." [ngModel]="search()" (ngModelChange)="search.set($event); pageNumber.set(1)" />
+  <select class="input" [ngModel]="categoryFilter()" (ngModelChange)="categoryFilter.set($event); pageNumber.set(1)">
+    <option [ngValue]="null">Todas as categorias</option>
+    @for (c of categories(); track c.id) {
+      <option [ngValue]="c.id">{{ c.name }}</option>
+    }
+  </select>
+</div>
+
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr><th></th><th>Produto</th><th>Preço</th><th>Estoque</th><th>Vendidos</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      @for (p of pageRows(); track p.id) {
+        <tr>
+          <td><img class="thumb" [src]="p.images[0]" alt="" /></td>
+          <td>
+            <span class="name">{{ p.name }}</span>
+            <span class="muted small">{{ p.category_name || 'Sem categoria' }}</span>
+          </td>
+          <td>
+            @if (p.final_price < p.price) {
+              <s class="muted small">{{ p.price | money }}</s><br />
+              <b style="color: var(--sale)">{{ p.final_price | money }}</b>
+            } @else {
+              {{ p.price | money }}
+            }
+          </td>
+          <td [class.stock-zero]="p.stock === 0">{{ p.stock === 0 ? 'Esgotado' : p.stock + ' un.' }}</td>
+          <td>{{ p.sold_count }}</td>
+          <td>
+            <button class="status" [class.on]="p.active" [class.off]="!p.active" (click)="toggleActive(p)" style="border: 0; cursor: pointer"
+              title="Clique para mostrar/esconder na loja">
+              {{ p.active ? 'Na loja' : 'Escondido' }}
+            </button>
+          </td>
+          <td class="actions">
+            <button class="icon-btn" (click)="open(p)" aria-label="Editar"><app-icon name="edit" [size]="17" /></button>
+            <button class="icon-btn" (click)="remove(p, p.name)" aria-label="Excluir"><app-icon name="trash" [size]="17" /></button>
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="7" class="empty">{{ items() ? 'Nenhum produto encontrado.' : 'Carregando...' }}</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+<app-pager [page]="page()" [pages]="pages()" [total]="total()" noun="produtos" (pageChange)="pageNumber.set($event)" />
+
+@if (draft(); as d) {
+  <div class="modal-backdrop" (click)="close()">
+    <form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="save()">
+      <div class="modal-head">
+        <h2>{{ d.id ? 'Editar produto' : 'Novo produto' }}</h2>
+        <button type="button" class="icon-btn" (click)="close()" aria-label="Fechar"><app-icon name="x" /></button>
+      </div>
+
+      <label class="field">
+        <span>Nome do produto</span>
+        <input class="input" name="name" [(ngModel)]="d.name" required placeholder="Ex.: Camiseta Básica Algodão" />
+      </label>
+      <label class="field">
+        <span>Categoria</span>
+        <select class="input" name="category" [(ngModel)]="d.category_id">
+          <option [ngValue]="null">Sem categoria</option>
+          @for (c of categories(); track c.id) {
+            <option [ngValue]="c.id">{{ c.name }}</option>
+          }
+        </select>
+      </label>
+      <div class="row">
+        <label class="field">
+          <span>Preço de venda (R$)</span>
+          <input class="input" type="number" step="0.01" min="0" name="price" [(ngModel)]="d.price" required />
+        </label>
+        <label class="field">
+          <span>Preço "de" (R$) <small>opcional</small></span>
+          <input class="input" type="number" step="0.01" min="0" name="compare" [(ngModel)]="d.compare_at_price" />
+          <small>Aparece riscado ao lado do preço.</small>
+        </label>
+      </div>
+      <label class="field">
+        <span>Descrição</span>
+        <textarea class="input" name="description" [(ngModel)]="d.description" placeholder="Tecido, caimento, dicas de uso..."></textarea>
+      </label>
+
+      <div class="flags">
+        <label class="check"><input type="checkbox" name="active" [(ngModel)]="d.active" /> Mostrar na loja</label>
+        <label class="check"><input type="checkbox" name="featured" [(ngModel)]="d.featured" /> Destaque</label>
+        <label class="check"><input type="checkbox" name="is_new" [(ngModel)]="d.is_new" /> Selo "Novo"</label>
+      </div>
+
+      <h3 class="form-section">Fotos</h3>
+      <div class="images">
+        @for (img of d.images; track img; let i = $index) {
+          <div class="img" [class.cover]="i === 0">
+            <img [src]="img" alt="" />
+            @if (i === 0) {
+              <span class="badge tag">Capa</span>
+            }
+            <div class="tools">
+              @if (i > 0) {
+                <button type="button" (click)="makeCover(d, i)">Capa</button>
+              } @else {
+                <span></span>
+              }
+              <button type="button" (click)="d.images.splice(i, 1)" aria-label="Remover foto"><app-icon name="trash" [size]="14" /></button>
+            </div>
+          </div>
+        }
+      </div>
+      <app-image-input [multiple]="true" label="Adicionar fotos" (uploaded)="d.images.push($event)" />
+
+      <h3 class="form-section">Tamanhos e estoque</h3>
+      <div class="grid-buttons">
+        <input class="input" style="max-width: 160px; min-height: 36px" name="gridColor" [(ngModel)]="gridColor" placeholder="Cor (opcional)" />
+        @for (g of grids; track g.label) {
+          <button type="button" class="btn sm outline" (click)="addGrid(d, g.sizes)">+ {{ g.label }}</button>
+        }
+      </div>
+      @if (d.variants.length) {
+        <table class="variants">
+          <thead><tr><th>Tamanho</th><th>Cor</th><th>Estoque</th><th></th></tr></thead>
+          <tbody>
+            @for (v of d.variants; track $index; let i = $index) {
+              <tr>
+                <td><input class="input" [name]="'size' + i" [(ngModel)]="v.size" required /></td>
+                <td><input class="input" [name]="'color' + i" [(ngModel)]="v.color" placeholder="-" /></td>
+                <td><input class="input" type="number" min="0" [name]="'stock' + i" [(ngModel)]="v.stock" /></td>
+                <td><button type="button" class="icon-btn" (click)="d.variants.splice(i, 1)" aria-label="Remover"><app-icon name="trash" [size]="16" /></button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <button type="button" class="link small" (click)="addVariant(d)">+ Adicionar tamanho</button>
+        <span class="total-stock">Total em estoque: <b>{{ totalStock(d) }}</b></span>
+      </div>
+
+      @if (error()) {
+        <p class="form-error">{{ error() }}</p>
+      }
+      <div class="modal-foot">
+        <button type="button" class="btn ghost" (click)="close()">Cancelar</button>
+        <button class="btn" type="submit" [disabled]="saving()">{{ saving() ? 'Salvando...' : 'Salvar produto' }}</button>
+      </div>
+    </form>
+  </div>
+}

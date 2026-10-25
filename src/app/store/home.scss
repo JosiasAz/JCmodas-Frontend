@@ -1,0 +1,359 @@
+// ------------------------------------------------------------ carrossel
+
+.hero {
+  position: relative;
+  height: clamp(420px, 56vh, 540px);
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s, visibility 0.6s;
+
+  &.active {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.slide-inner {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: center;
+  gap: 32px;
+}
+
+.copy {
+  max-width: 520px;
+
+  h1 {
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+  }
+  p {
+    font-size: 1.1rem;
+    opacity: 0.85;
+    margin-bottom: 28px;
+  }
+}
+
+.art {
+  justify-self: center;
+  height: 100%;
+  max-height: 480px;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 18px;
+  transform: rotate(2deg);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 0.25);
+  margin: 30px 0;
+}
+
+.slide.active .copy {
+  animation: rise 0.6s ease-out;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.85);
+  color: var(--ink);
+  cursor: pointer;
+
+  &.left {
+    left: 16px;
+  }
+  &.right {
+    right: 16px;
+  }
+}
+
+.dots {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+
+  button {
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+    transition: width 0.2s;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15);
+
+    &.on {
+      width: 28px;
+      background: #fff;
+    }
+  }
+}
+
+.hero-skeleton {
+  height: 480px;
+  border-radius: 0;
+}
+
+@media (max-width: 760px) {
+  .hero {
+    height: 520px;
+  }
+  .slide-inner {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    align-content: start;
+    padding-top: 36px;
+    gap: 8px;
+  }
+  .art {
+    max-height: 250px;
+    margin: 0;
+  }
+  .arrow {
+    display: none;
+  }
+}
+
+// ------------------------------------------------------------ loja vazia
+
+.coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: 72px;
+  padding-bottom: 72px;
+
+  img {
+    width: 180px;
+    margin-bottom: 24px;
+  }
+  p {
+    max-width: 420px;
+    margin-bottom: 24px;
+  }
+}
+
+// ------------------------------------------------------------ vantagens
+
+.perks {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 28px;
+
+  div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+  strong {
+    display: block;
+    color: var(--ink);
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// ------------------------------------------------------------ categorias
+
+.categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 16px;
+}
+
+.category {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-align: center;
+
+  .cat-img {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--sand);
+    border: 3px solid transparent;
+    transition: border-color 0.2s;
+  }
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.15);
+  }
+  &:hover .cat-img {
+    border-color: var(--ink);
+  }
+}
+
+// ------------------------------------------------------------ anúncios em cartão
+
+.promo-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+:host ::ng-deep .promo-card {
+  display: block;
+}
+
+.promo-card-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 190px;
+  padding: 30px;
+  border-radius: 18px;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-3px);
+  }
+  h3 {
+    font-size: 1.6rem;
+  }
+  p {
+    opacity: 0.8;
+  }
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  img {
+    width: 120px;
+    border-radius: 12px;
+  }
+}
+
+// ------------------------------------------------------------ combos
+
+.combos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.combo {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: var(--shadow);
+  }
+}
+
+.combo-img {
+  position: relative;
+  aspect-ratio: 16 / 11;
+  background: var(--sand);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+  }
+}
+
+.combo-info {
+  padding: 16px 18px 18px;
+
+  h3 {
+    margin-bottom: 4px;
+  }
+  .price {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+  s {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  strong {
+    font-size: 1.25rem;
+  }
+}
+
+// ------------------------------------------------------------ faixa
+
+.strip {
+  margin: 24px 0;
+}
+
+.strip-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 40px;
+  padding-bottom: 40px;
+
+  h2 {
+    margin: 0 0 4px;
+  }
+  p {
+    margin: 0;
+    opacity: 0.8;
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

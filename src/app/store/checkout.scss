@@ -1,0 +1,159 @@
+.page {
+  padding-top: 24px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 28px;
+  align-items: start;
+
+  @media (max-width: 960px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.step {
+  padding: 24px;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font);
+    font-size: 1.05rem;
+    margin-bottom: 18px;
+  }
+}
+
+.num {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.choices {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  .choice > div {
+    display: flex;
+    flex-direction: column;
+  }
+  .badge {
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+}
+
+.address {
+  margin-top: 8px;
+}
+
+.span-2 {
+  grid-column: span 2;
+  @media (max-width: 640px) {
+    grid-column: auto;
+  }
+}
+
+.err {
+  color: var(--sale) !important;
+}
+
+.installments,
+.notes {
+  margin-top: 8px;
+}
+
+.summary {
+  position: sticky;
+  top: 104px;
+  padding: 24px;
+
+  h3 {
+    margin-bottom: 14px;
+  }
+  .btn {
+    margin: 18px 0 10px;
+  }
+}
+
+.items {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+
+  li {
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    font-size: 0.88rem;
+  }
+  img {
+    width: 48px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+  div {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.remember {
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 8px;
+  font-size: 0.88rem;
+}
+
+.policy {
+  text-decoration: underline;
+}
+
+.error {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--sale-soft);
+  color: var(--sale);
+  font-weight: 600;
+  font-size: 0.88rem;
+}

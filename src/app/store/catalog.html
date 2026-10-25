@@ -1,0 +1,122 @@
+<div class="container page">
+  <nav class="crumbs small muted"><a routerLink="/">Início</a> / <span>{{ heading() }}</span></nav>
+
+  <div class="top">
+    <div>
+      <h1>{{ heading() }}</h1>
+      @if (page(); as p) {
+        <p class="muted">{{ p.total }} {{ p.total === 1 ? 'produto' : 'produtos' }}</p>
+      }
+    </div>
+    <div class="top-tools">
+      <button class="btn outline sm only-mobile" (click)="showFilters.set(true)">
+        <app-icon name="filter" [size]="16" /> Filtros @if (activeCount()) { ({{ activeCount() }}) }
+      </button>
+      <label class="sort">
+        <span class="sr-only">Ordenar por</span>
+        <select class="input" [ngModel]="sort()" (ngModelChange)="set({ ordem: $event === 'relevance' ? null : $event })">
+          @for (s of sorts; track s.value) {
+            <option [value]="s.value">{{ s.label }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <!-- atalhos de categoria -->
+  <div class="chips">
+    <button class="chip" [class.on]="!category()" (click)="set({ categoria: null })">Tudo</button>
+    @for (c of categories(); track c.id) {
+      <button class="chip" [class.on]="category() === c.slug" (click)="set({ categoria: c.slug })">{{ c.name }}</button>
+    }
+  </div>
+
+  <div class="layout">
+    <aside class="filters" [class.open]="showFilters()">
+      <div class="filters-head only-mobile">
+        <h3>Filtros</h3>
+        <button class="icon-btn" (click)="showFilters.set(false)" aria-label="Fechar"><app-icon name="x" /></button>
+      </div>
+
+      <div class="group">
+        <label class="check promo-toggle">
+          <input type="checkbox" [checked]="promo()" (change)="set({ promo: promo() ? null : 1 })" />
+          <span><app-icon name="tag" [size]="16" /> Só promoções</span>
+        </label>
+      </div>
+
+      @if (filters(); as f) {
+        <div class="group">
+          <h4>Tamanho</h4>
+          <div class="sizes">
+            @for (s of f.sizes; track s) {
+              <button class="size" [class.on]="sizes().includes(s)" (click)="toggle('tamanho', s)">{{ s }}</button>
+            }
+          </div>
+        </div>
+
+        <div class="group">
+          <h4>Cor</h4>
+          @for (c of f.colors; track c) {
+            <label class="check">
+              <input type="checkbox" [checked]="colors().includes(c)" (change)="toggle('cor', c)" />
+              {{ c }}
+            </label>
+          }
+        </div>
+      }
+
+      <div class="group">
+        <h4>Preço</h4>
+        @for (r of priceRanges; track r.label) {
+          <label class="check">
+            <input type="radio" name="price" [checked]="isRange(r)" (click)="setRange(r)" />
+            {{ r.label }}
+          </label>
+        }
+      </div>
+
+      @if (activeCount()) {
+        <button class="link" (click)="clearAll()">Limpar filtros</button>
+      }
+      <button class="btn block only-mobile apply" (click)="showFilters.set(false)">Ver produtos</button>
+    </aside>
+
+    <section class="results">
+      @if (loading() && !page()) {
+        <div class="grid-products">
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+            <div class="skeleton" style="aspect-ratio: 4/5"></div>
+          }
+        </div>
+      } @else if (page(); as p) {
+        @if (p.items.length) {
+          <div class="grid-products results-grid" [class.dim]="loading()">
+            @for (product of p.items; track product.id) {
+              <app-product-card [product]="product" />
+            }
+          </div>
+
+          @if (p.pages > 1) {
+            <div class="pager">
+              <button class="icon-btn" [disabled]="p.page === 1" (click)="goTo(p.page - 1)" aria-label="Anterior">
+                <app-icon name="left" />
+              </button>
+              <span>Página {{ p.page }} de {{ p.pages }}</span>
+              <button class="icon-btn" [disabled]="p.page === p.pages" (click)="goTo(p.page + 1)" aria-label="Próxima">
+                <app-icon name="right" />
+              </button>
+            </div>
+          }
+        } @else {
+          <div class="empty">
+            <app-icon name="search" [size]="40" />
+            <h3>Nenhum produto encontrado</h3>
+            <p>Tente remover alguns filtros ou buscar por outro termo.</p>
+            <button class="btn outline" (click)="clearAll()">Limpar filtros</button>
+          </div>
+        }
+      }
+    </section>
+  </div>
+</div>

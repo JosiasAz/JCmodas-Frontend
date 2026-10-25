@@ -1,0 +1,473 @@
+/* ==========================================================================
+   JC Moda Masculina - estilos globais
+   Paleta preto e branco da marca + vermelho só para ofertas.
+   ========================================================================== */
+
+:root {
+  --ink: #111111;
+  --ink-2: #2b2b2b;
+  --muted: #6d6a65;
+  --line: #e6e3dd;
+  --bg: #f7f6f3;
+  --paper: #ffffff;
+  --sand: #ece8df;
+  --sale: #c8102e;
+  --sale-soft: #fbe9ec;
+  --ok: #1d7a46;
+  --ok-soft: #e5f3eb;
+  --warn: #a8660b;
+  --warn-soft: #fdf1dc;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.06);
+  --container: 1240px;
+
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* contorno de foco só para quem navega pelo teclado (no clique do mouse ele some) */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 0.5em;
+  letter-spacing: -0.01em;
+}
+
+h1 { font-size: clamp(1.8rem, 3.5vw, 2.6rem); }
+h2 { font-size: clamp(1.4rem, 2.6vw, 1.9rem); }
+h3 { font-size: 1.15rem; }
+
+p { margin: 0 0 1em; }
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.center { text-align: center; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* ------------------------------------------------------------- botões */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 22px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.1s, opacity 0.15s;
+  white-space: nowrap;
+
+  &:hover { background: var(--ink-2); }
+  &:active { transform: scale(0.98); }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  &.outline {
+    background: transparent;
+    color: var(--ink);
+    &:hover { background: var(--ink); color: #fff; }
+  }
+  &.light {
+    background: #fff;
+    border-color: #fff;
+    color: var(--ink);
+    &:hover { background: var(--sand); }
+  }
+  &.ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--ink);
+    &:hover { background: var(--sand); }
+  }
+  &.whatsapp {
+    background: #1fa855;
+    border-color: #1fa855;
+    &:hover { background: #188d47; }
+  }
+  &.danger {
+    background: var(--sale);
+    border-color: var(--sale);
+  }
+  &.block { width: 100%; }
+  &.sm { min-height: 36px; padding: 0 14px; font-size: 0.85rem; }
+  &.lg { min-height: 54px; padding: 0 30px; font-size: 1.02rem; }
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+  &:hover { background: var(--sand); }
+}
+
+.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------------- etiquetas */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: #fff;
+
+  &.sale { background: var(--sale); }
+  &.ok { background: var(--ok-soft); color: var(--ok); }
+  &.warn { background: var(--warn-soft); color: var(--warn); }
+  &.soft { background: var(--sand); color: var(--ink); }
+  &.new { background: #fff; color: var(--ink); border: 1px solid var(--ink); }
+}
+
+/* ------------------------------------------------------------- formulários */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+
+  > span,
+  > label {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  small { color: var(--muted); font-size: 0.78rem; }
+}
+
+.input,
+input.input,
+select.input,
+textarea.input {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font: inherit;
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgb(17 17 17 / 0.08);
+  }
+  &.ng-invalid.ng-touched { border-color: var(--sale); }
+}
+
+textarea.input { min-height: 96px; resize: vertical; }
+
+.row {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  input { width: 18px; height: 18px; accent-color: var(--ink); }
+}
+
+/* cartões de escolha (entrega, pagamento) */
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  input { accent-color: var(--ink); width: 18px; height: 18px; }
+  &:has(input:checked) { border-color: var(--ink); background: #fcfbf9; }
+  strong { display: block; }
+  .muted { font-size: 0.85rem; }
+}
+
+/* ------------------------------------------------------------- blocos */
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.section { padding-top: 48px; padding-bottom: 48px; }
+
+.section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  h2 { margin: 0; }
+  p { margin: 4px 0 0; color: var(--muted); }
+  a { font-weight: 600; white-space: nowrap; text-decoration: underline; text-underline-offset: 4px; }
+}
+
+.grid-products {
+  display: grid;
+  gap: 22px 18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  @media (max-width: 1024px) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 720px) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+}
+
+.empty {
+  text-align: center;
+  padding: 56px 20px;
+  color: var(--muted);
+  h3 { color: var(--ink); }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #eeece8 25%, #f6f5f2 50%, #eeece8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: var(--radius);
+}
+
+@keyframes shimmer {
+  to { background-position: -200% 0; }
+}
+
+/* ------------------------------------------------------------- tabelas (painel) */
+
+.table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+table.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th,
+  td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    font-weight: 600;
+    background: #fbfaf8;
+  }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #fcfbf9; }
+  .thumb {
+    width: 44px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 6px;
+    background: var(--sand);
+  }
+  .actions { text-align: right; white-space: nowrap; }
+}
+
+/* ------------------------------------------------------------- modal (painel) */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: flex-end;
+  background: rgb(0 0 0 / 0.35);
+  animation: fade 0.15s;
+}
+
+.modal {
+  width: min(640px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg);
+  padding: 24px;
+  animation: slide 0.2s ease-out;
+
+  .modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    h2 { margin: 0; font-size: 1.4rem; }
+  }
+  .modal-foot {
+    position: sticky;
+    bottom: -24px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin: 20px -24px -24px;
+    padding: 16px 24px;
+    background: #fff;
+    border-top: 1px solid var(--line);
+  }
+}
+
+@keyframes fade { from { opacity: 0; } }
+@keyframes slide { from { transform: translateX(40px); opacity: 0; } }
+
+/* ------------------------------------------------------------- painel */
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 22px;
+
+  h1 { font-size: 1.9rem; margin-bottom: 2px; }
+  p { margin: 0; }
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+
+  .input { max-width: 300px; min-height: 42px; }
+}
+
+.status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--sand);
+
+  &.novo { background: var(--warn-soft); color: var(--warn); }
+  &.pago, &.separando { background: #e6eef8; color: #1f4f8a; }
+  &.enviado { background: #efe8f8; color: #5b3a8c; }
+  &.entregue, &.on { background: var(--ok-soft); color: var(--ok); }
+  &.cancelado, &.off { background: var(--sale-soft); color: var(--sale); }
+}
+
+.form-section {
+  margin: 22px 0 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.form-error {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--sale-soft);
+  color: var(--sale);
+  font-weight: 600;
+  font-size: 0.88rem;
+}

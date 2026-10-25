@@ -1,0 +1,94 @@
+<div class="container page">
+  <h1>Seu carrinho</h1>
+
+  @if (cart.isEmpty()) {
+    <div class="empty card">
+      <app-icon name="bag" [size]="44" />
+      <h3>Seu carrinho está vazio</h3>
+      <p>Que tal dar uma olhada nas ofertas da semana?</p>
+      <a class="btn lg" routerLink="/loja" [queryParams]="{ promo: 1 }">Ver promoções</a>
+    </div>
+  } @else if (quote(); as q) {
+    <div class="layout">
+      <section class="lines" [class.dim]="loading()">
+        @if (freeShippingProgress() !== null) {
+          <div class="shipping-bar card">
+            @if (q.free_shipping_missing > 0) {
+              <p>Faltam <b>{{ q.free_shipping_missing | money }}</b> para ganhar <b>frete grátis</b></p>
+            } @else {
+              <p><app-icon name="truck" [size]="18" /> Parabéns! Você ganhou <b>frete grátis</b></p>
+            }
+            <div class="progress"><span [style.width.%]="freeShippingProgress()"></span></div>
+          </div>
+        }
+
+        @for (line of q.lines; track line.key) {
+          <article class="line card" [class.unavailable]="!line.available">
+            @if (line.image) {
+              <img [src]="line.image" [alt]="line.name" />
+            }
+            <div class="info">
+              <h3>{{ line.name }}</h3>
+              <p class="muted small">{{ line.detail }}</p>
+              @if (line.message) {
+                <p class="warn small">{{ line.message }}</p>
+              }
+              <div class="price">
+                @if (line.old_unit_price) {
+                  <s>{{ line.old_unit_price | money }}</s>
+                }
+                <span>{{ line.unit_price | money }}</span>
+              </div>
+            </div>
+            <div class="controls">
+              <div class="qty">
+                <button (click)="cart.setQuantity(line.key, line.quantity - 1)" aria-label="Diminuir">
+                  <app-icon [name]="line.quantity === 1 ? 'trash' : 'minus'" [size]="15" />
+                </button>
+                <span>{{ line.quantity }}</span>
+                <button (click)="cart.setQuantity(line.key, line.quantity + 1)" aria-label="Aumentar">
+                  <app-icon name="plus" [size]="15" />
+                </button>
+              </div>
+              <strong>{{ line.total | money }}</strong>
+              <button class="link small muted" (click)="cart.setQuantity(line.key, 0)">Remover</button>
+            </div>
+          </article>
+        }
+
+        <a routerLink="/loja" class="keep"><app-icon name="left" [size]="16" /> Continuar comprando</a>
+      </section>
+
+      <aside class="summary card">
+        <h3>Resumo</h3>
+
+        <form class="coupon" (ngSubmit)="applyCoupon()">
+          <input class="input" name="coupon" [(ngModel)]="couponInput" placeholder="Cupom de desconto" aria-label="Cupom" />
+          <button class="btn outline" type="submit" [disabled]="!couponInput.trim()">Aplicar</button>
+        </form>
+        @if (q.coupon_message) {
+          <p class="coupon-msg" [class.ok]="q.coupon_valid">
+            {{ q.coupon_message }}
+            @if (cart.coupon()) {
+              <button class="link" (click)="removeCoupon()">remover</button>
+            }
+          </p>
+        }
+
+        <app-cart-totals [quote]="q" [pixHint]="true" />
+        <p class="muted small note">Frete calculado para entrega.{{ store.settings()?.pickup_enabled ? ' Retirada na loja é grátis.' : '' }}</p>
+
+        <a class="btn lg block" routerLink="/checkout" [class.disabled]="!q.can_checkout"
+          [attr.aria-disabled]="!q.can_checkout" (click)="!q.can_checkout && $event.preventDefault()">
+          Finalizar compra <app-icon name="arrow" [size]="18" />
+        </a>
+        @if (!q.can_checkout) {
+          <p class="warn small">Ajuste os itens indisponíveis para continuar.</p>
+        }
+        <div class="safe muted small"><app-icon name="shield" [size]="16" /> Compra segura</div>
+      </aside>
+    </div>
+  } @else {
+    <div class="skeleton" style="height: 260px"></div>
+  }
+</div>

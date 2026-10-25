@@ -1,0 +1,143 @@
+@if (store.settings()?.announcement; as text) {
+  <div class="announcement">{{ text }}</div>
+}
+
+<header class="header">
+  <div class="container bar">
+    <!-- esquerda: menu (celular) + logo -->
+    <div class="left">
+      <button class="icon-btn mobile-only" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen()" aria-label="Abrir menu">
+        <app-icon [name]="menuOpen() ? 'x' : 'menu'" [size]="22" />
+      </button>
+      <a routerLink="/" class="brand" aria-label="JC Moda Masculina - início">
+        <img src="logo/jc-logo-horizontal.svg" alt="JC Moda Masculina" />
+      </a>
+    </div>
+
+    <!-- centro: menu principal (computador) -->
+    <nav class="nav desktop-only" aria-label="Menu principal">
+      @for (item of nav; track item.label) {
+        <a
+          [routerLink]="item.link"
+          [queryParams]="item.query"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.exact }"
+          [class.promo]="item.query"
+          >{{ item.label }}</a
+        >
+      }
+    </nav>
+
+    <!-- direita: busca + carrinho -->
+    <div class="tools">
+      <button class="icon-btn" (click)="toggleSearch()" [class.on]="searchOpen()" [attr.aria-expanded]="searchOpen()" aria-label="Buscar">
+        <app-icon [name]="searchOpen() ? 'x' : 'search'" [size]="21" />
+      </button>
+      <a routerLink="/carrinho" class="cart-btn" aria-label="Carrinho">
+        <app-icon name="bag" [size]="20" />
+        <span class="label">Carrinho</span>
+        @if (cart.count()) {
+          <span class="count">{{ cart.count() }}</span>
+        }
+      </a>
+    </div>
+  </div>
+
+  <!-- barra de busca que abre abaixo do cabeçalho -->
+  @if (searchOpen()) {
+    <div class="search-panel">
+      <form class="container search" (ngSubmit)="submitSearch()" role="search">
+        <app-icon name="search" [size]="20" />
+        <input #searchInput name="q" [(ngModel)]="search" placeholder="O que você procura? Camisetas, polos, calças..." aria-label="Buscar produtos" />
+        <button class="btn sm" type="submit">Buscar</button>
+      </form>
+    </div>
+  }
+</header>
+
+<!-- gaveta do menu (celular/tablet) -->
+@if (menuOpen()) {
+  <div class="drawer-backdrop" (click)="menuOpen.set(false)"></div>
+}
+<aside class="drawer" [class.open]="menuOpen()" [attr.aria-hidden]="!menuOpen()">
+  <nav aria-label="Menu">
+    @for (item of nav; track item.label) {
+      <a
+        [routerLink]="item.link"
+        [queryParams]="item.query"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.exact }"
+        [class.promo]="item.query"
+        [attr.tabindex]="menuOpen() ? 0 : -1"
+      >
+        <app-icon [name]="item.icon" [size]="20" /> {{ item.label }}
+      </a>
+    }
+  </nav>
+  @if (store.settings()?.whatsapp) {
+    <a class="btn whatsapp block" [href]="whatsappHelp()" target="_blank" rel="noopener" [attr.tabindex]="menuOpen() ? 0 : -1">
+      <app-icon name="whatsapp" [size]="18" /> Falar no WhatsApp
+    </a>
+  }
+</aside>
+
+<main>
+  <router-outlet />
+</main>
+
+<footer class="footer">
+  <div class="container cols">
+    <div class="about">
+      <img src="logo/jc-logo-horizontal-branca.svg" alt="JC Moda Masculina" class="footer-logo" />
+      <p>Roupas masculinas com caimento, qualidade e preço justo. Compre online e receba em casa{{ store.settings()?.pickup_enabled ? ' ou retire na loja' : '' }}.</p>
+    </div>
+
+    <div>
+      <h4>Comprar</h4>
+      <a routerLink="/loja">Todos os produtos</a>
+      <a routerLink="/loja" [queryParams]="{ promo: 1 }">Promoções</a>
+      <a routerLink="/combos">Combos</a>
+      <a routerLink="/rastrear">Acompanhar pedido</a>
+    </div>
+
+    @if (store.settings(); as s) {
+      <div [hidden]="!s.whatsapp && !s.instagram && !s.opening_hours && !s.address">
+        <h4>Atendimento</h4>
+        @if (s.whatsapp) {
+          <a [href]="whatsappHelp()" target="_blank" rel="noopener"><app-icon name="whatsapp" [size]="16" /> WhatsApp</a>
+        }
+        @if (s.instagram) {
+          <a [href]="'https://instagram.com/' + s.instagram" target="_blank" rel="noopener">
+            <app-icon name="instagram" [size]="16" /> &#64;{{ s.instagram }}
+          </a>
+        }
+        @if (s.opening_hours) {
+          <span><app-icon name="clock" [size]="16" /> {{ s.opening_hours }}</span>
+        }
+        @if (s.address) {
+          <span><app-icon name="pin" [size]="16" /> {{ s.address }}</span>
+        }
+      </div>
+
+      <div>
+        <h4>Pagamento</h4>
+        <span><app-icon name="pix" [size]="16" /> Pix{{ s.pix_discount_percent ? ' com ' + s.pix_discount_percent + '% OFF' : '' }}</span>
+        <span><app-icon name="card" [size]="16" /> Cartão{{ s.max_installments > 1 ? ' em até ' + s.max_installments + 'x' : '' }}</span>
+        @if (s.free_shipping_min) {
+          <span><app-icon name="truck" [size]="16" /> Frete grátis acima de {{ s.free_shipping_min | money }}</span>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="container legal">
+    <span>© {{ year }} {{ store.settings()?.store_name || 'JC Moda Masculina' }}</span>
+    <span class="legal-links"><a routerLink="/privacidade">Política de privacidade</a> · <a routerLink="/admin">Área do lojista</a></span>
+  </div>
+</footer>
+
+@if (store.settings()?.whatsapp) {
+  <a class="whatsapp-float" [href]="whatsappHelp()" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
+    <app-icon name="whatsapp" [size]="28" />
+  </a>
+}

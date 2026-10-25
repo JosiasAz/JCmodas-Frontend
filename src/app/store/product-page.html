@@ -1,0 +1,187 @@
+@if (product(); as p) {
+  <div class="container page">
+    <nav class="crumbs small muted">
+      <a routerLink="/">Início</a> /
+      <a routerLink="/loja">Loja</a> /
+      @if (p.category_name) {
+        <a routerLink="/loja" [queryParams]="{ categoria: p.category_slug }">{{ p.category_name }}</a> /
+      }
+      <span>{{ p.name }}</span>
+    </nav>
+
+    <div class="main">
+      <!-- galeria -->
+      <div class="gallery">
+        <div class="thumbs">
+          @for (img of p.images; track img; let i = $index) {
+            <button [class.on]="i === image()" (click)="image.set(i)" [attr.aria-label]="'Foto ' + (i + 1)">
+              <img [src]="img" alt="" />
+            </button>
+          }
+        </div>
+        <div class="photo">
+          <img [src]="p.images[image()]" [alt]="p.name" />
+          <div class="badges">
+            @if (p.discount_percent) {
+              <span class="badge sale">-{{ p.discount_percent }}%</span>
+            }
+            @for (b of badges(); track b) {
+              <span class="badge" [class.new]="b === 'Novo'">{{ b }}</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- compra -->
+      <div class="buy">
+        <h1>{{ p.name }}</h1>
+
+        <div class="price">
+          @if (p.old_price) {
+            <s>{{ p.old_price | money }}</s>
+          }
+          <strong [class.sale]="p.old_price">{{ p.final_price | money }}</strong>
+        </div>
+        <div class="pay-info">
+          @if (store.pixPercent()) {
+            <span class="pix"><app-icon name="pix" [size]="16" /> <b>{{ store.pixPrice(p.final_price) | money }}</b> no Pix ({{ store.pixPercent() }}% OFF)</span>
+          }
+          @if (installments(); as inst) {
+            <span><app-icon name="card" [size]="16" /> ou {{ inst.n }}x de {{ inst.value | money }} sem juros</span>
+          }
+        </div>
+
+        @if (cartHint(); as hint) {
+          <div class="hint">
+            <app-icon name="tag" [size]="18" />
+            <span><b>{{ hint }}</b>: o desconto é aplicado automaticamente no carrinho. Pode misturar cores e modelos da mesma categoria.</span>
+          </div>
+        }
+
+        @if (p.stock === 0) {
+          <div class="soldout">
+            <strong>Produto esgotado</strong>
+            <p>Fale com a gente no WhatsApp para saber quando volta.</p>
+          </div>
+        } @else {
+          @if (colors().length > 1) {
+            <div class="option">
+              <span class="option-label">Cor: <b>{{ color() }}</b></span>
+              <div class="pills">
+                @for (c of colors(); track c) {
+                  <button class="pill" [class.on]="c === color()" (click)="pickColor(c)">{{ c }}</button>
+                }
+              </div>
+            </div>
+          } @else if (color()) {
+            <p class="option-label">Cor: <b>{{ color() }}</b></p>
+          }
+
+          <div class="option">
+            <span class="option-label">
+              Tamanho @if (variant(); as v) { : <b>{{ v.size }}</b> }
+            </span>
+            <div class="pills">
+              @for (v of sizes(); track v.id) {
+                <button class="pill size" [class.on]="v.id === variant()?.id" [class.out]="!v.stock" [disabled]="!v.stock" (click)="pickSize(v)">
+                  {{ v.size }}
+                </button>
+              }
+            </div>
+            @if (sizeError()) {
+              <p class="error">Escolha um tamanho para continuar</p>
+            }
+            @if (variant(); as v) {
+              @if (v.stock <= lowStock) {
+                <p class="low">Últimas {{ v.stock }} {{ v.stock === 1 ? 'unidade' : 'unidades' }}!</p>
+              }
+            }
+          </div>
+
+          <div class="actions">
+            <div class="qty" aria-label="Quantidade">
+              <button (click)="changeQty(-1)" aria-label="Diminuir"><app-icon name="minus" [size]="16" /></button>
+              <span>{{ quantity() }}</span>
+              <button (click)="changeQty(1)" aria-label="Aumentar"><app-icon name="plus" [size]="16" /></button>
+            </div>
+            <button class="btn lg grow" (click)="add()"><app-icon name="bag" [size]="18" /> Adicionar ao carrinho</button>
+          </div>
+          <button class="btn outline lg block" (click)="add(true)">Comprar agora</button>
+        }
+
+        @if (store.settings()?.whatsapp) {
+          <a class="btn whatsapp block lg wa" [href]="whatsappLink()" target="_blank" rel="noopener">
+            <app-icon name="whatsapp" [size]="18" /> Tirar dúvidas no WhatsApp
+          </a>
+        }
+
+        @if (store.settings(); as s) {
+          @if (s.free_shipping_min || s.pickup_enabled) {
+            <ul class="perks">
+              @if (s.free_shipping_min) {
+                <li><app-icon name="truck" [size]="18" /> Frete grátis acima de {{ s.free_shipping_min | money }}</li>
+              }
+              @if (s.pickup_enabled) {
+                <li><app-icon name="store" [size]="18" /> Retire grátis na loja</li>
+              }
+            </ul>
+          }
+        }
+
+        @if (p.description) {
+          <div class="description">
+            <h3>Sobre o produto</h3>
+            <p>{{ p.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- combos com este produto -->
+    @if (detail()!.combos.length) {
+      <section class="section">
+        <div class="section-head"><div><h2>Leve no combo e economize</h2></div></div>
+        <div class="combos">
+          @for (c of detail()!.combos; track c.id) {
+            <a class="combo" routerLink="/combos" [fragment]="c.slug">
+              <div>
+                <strong>{{ c.name }}</strong>
+                <p class="muted small">{{ c.description }}</p>
+              </div>
+              <div class="combo-price">
+                <s>{{ c.original_price | money }}</s>
+                <strong>{{ c.price | money }}</strong>
+                <span class="badge sale">-{{ c.savings | money }}</span>
+              </div>
+            </a>
+          }
+        </div>
+      </section>
+    }
+
+    @if (detail()!.related.length) {
+      <section class="section">
+        <div class="section-head"><div><h2>Você também pode gostar</h2></div></div>
+        <div class="grid-products">
+          @for (r of detail()!.related.slice(0, 4); track r.id) {
+            <app-product-card [product]="r" />
+          }
+        </div>
+      </section>
+    }
+  </div>
+} @else if (notFound()) {
+  <div class="container empty">
+    <h3>Produto não encontrado</h3>
+    <p>Ele pode ter saído de linha. Que tal ver as outras peças?</p>
+    <a class="btn" routerLink="/loja">Ir para a loja</a>
+  </div>
+} @else {
+  <div class="container page main">
+    <div class="skeleton" style="aspect-ratio: 4/5"></div>
+    <div>
+      <div class="skeleton" style="height: 40px; margin-bottom: 16px"></div>
+      <div class="skeleton" style="height: 24px; width: 40%"></div>
+    </div>
+  </div>
+}

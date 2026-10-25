@@ -1,0 +1,200 @@
+<div class="container page">
+  <a routerLink="/carrinho" class="back small"><app-icon name="left" [size]="16" /> Voltar ao carrinho</a>
+  <h1>Finalizar compra</h1>
+
+  <form #f="ngForm" class="layout" (ngSubmit)="submit(f)" novalidate>
+    <div class="hp" aria-hidden="true">
+      <label>Site <input name="website" [(ngModel)]="form.website" tabindex="-1" autocomplete="off" /></label>
+    </div>
+    <div class="steps">
+      <!-- 1. dados -->
+      <section class="card step">
+        <h3><span class="num">1</span> Seus dados</h3>
+        <label class="field">
+          <span>Nome completo</span>
+          <input class="input" name="customer_name" [(ngModel)]="form.customer_name" required minlength="3" autocomplete="name" />
+        </label>
+        <div class="row">
+          <label class="field">
+            <span>WhatsApp / Celular</span>
+            <input class="input" name="phone" [(ngModel)]="form.phone" (input)="formatPhone()" required minlength="14"
+              inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" />
+          </label>
+          <label class="field">
+            <span>E-mail <small>(opcional)</small></span>
+            <input class="input" name="email" type="email" [(ngModel)]="form.email" email autocomplete="email" />
+          </label>
+        </div>
+      </section>
+
+      <!-- 2. entrega -->
+      <section class="card step">
+        <h3><span class="num">2</span> Entrega</h3>
+        <div class="choices">
+          <label class="choice">
+            <input type="radio" name="delivery" value="entrega" [ngModel]="delivery()" (ngModelChange)="delivery.set($event)" />
+            <app-icon name="truck" [size]="22" />
+            <div>
+              <strong>Receber em casa</strong>
+              <span class="muted">
+                @if (store.settings()?.free_shipping_min) {
+                  Grátis acima de {{ store.settings()!.free_shipping_min | money }}
+                } @else if (store.settings()?.shipping_fee) {
+                  Taxa de {{ store.settings()?.shipping_fee | money }}
+                } @else {
+                  Entrega grátis
+                }
+              </span>
+            </div>
+          </label>
+          @if (store.settings()?.pickup_enabled) {
+            <label class="choice">
+              <input type="radio" name="delivery" value="retirada" [ngModel]="delivery()" (ngModelChange)="delivery.set($event)" />
+              <app-icon name="store" [size]="22" />
+              <div>
+                <strong>Retirar na loja</strong>
+                <span class="muted">Grátis{{ store.settings()?.address ? ' · ' + store.settings()?.address : '' }}</span>
+              </div>
+            </label>
+          }
+        </div>
+
+        @if (delivery() === 'entrega') {
+          <div class="address">
+            <div class="row" style="--cols: 3">
+              <label class="field">
+                <span>CEP</span>
+                <input class="input" name="cep" [(ngModel)]="form.cep" (blur)="lookupCep()" (keyup)="form.cep.replace('-', '').length === 8 && lookupCep()"
+                  required inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" />
+                @if (cepStatus() === 'loading') {
+                  <small>Buscando endereço...</small>
+                } @else if (cepStatus() === 'error') {
+                  <small class="err">CEP não encontrado. Preencha manualmente.</small>
+                }
+              </label>
+            </div>
+            <div class="row" style="--cols: 3">
+              <label class="field span-2">
+                <span>Rua / Avenida</span>
+                <input class="input" name="street" [(ngModel)]="form.street" required autocomplete="address-line1" />
+              </label>
+              <label class="field">
+                <span>Número</span>
+                <input class="input" name="number" [(ngModel)]="form.number" required />
+              </label>
+            </div>
+            <div class="row">
+              <label class="field">
+                <span>Complemento <small>(opcional)</small></span>
+                <input class="input" name="complement" [(ngModel)]="form.complement" />
+              </label>
+              <label class="field">
+                <span>Bairro</span>
+                <input class="input" name="district" [(ngModel)]="form.district" required />
+              </label>
+            </div>
+            <div class="row" style="--cols: 3">
+              <label class="field span-2">
+                <span>Cidade</span>
+                <input class="input" name="city" [(ngModel)]="form.city" required autocomplete="address-level2" />
+              </label>
+              <label class="field">
+                <span>UF</span>
+                <input class="input" name="state" [(ngModel)]="form.state" required maxlength="2" style="text-transform: uppercase" />
+              </label>
+            </div>
+          </div>
+        }
+      </section>
+
+      <!-- 3. pagamento -->
+      <section class="card step">
+        <h3><span class="num">3</span> Pagamento</h3>
+        <div class="choices">
+          <label class="choice">
+            <input type="radio" name="payment" value="pix" [ngModel]="payment()" (ngModelChange)="payment.set($event)" />
+            <app-icon name="pix" [size]="22" />
+            <div>
+              <strong>Pix @if (store.pixPercent()) { <span class="badge ok">{{ store.pixPercent() }}% OFF</span> }</strong>
+              <span class="muted">{{ store.settings()?.pix_key ? 'Você recebe a chave Pix ao finalizar' : 'Enviamos os dados do Pix pelo WhatsApp' }}</span>
+            </div>
+          </label>
+          <label class="choice">
+            <input type="radio" name="payment" value="cartao" [ngModel]="payment()" (ngModelChange)="payment.set($event)" />
+            <app-icon name="card" [size]="22" />
+            <div>
+              <strong>Cartão de crédito</strong>
+              <span class="muted">Em até {{ quote()?.max_installments ?? store.maxInstallments() }}x sem juros</span>
+            </div>
+          </label>
+          <label class="choice">
+            <input type="radio" name="payment" value="dinheiro" [ngModel]="payment()" (ngModelChange)="payment.set($event)" />
+            <app-icon name="cash" [size]="22" />
+            <div>
+              <strong>Dinheiro</strong>
+              <span class="muted">Na entrega ou na retirada</span>
+            </div>
+          </label>
+        </div>
+
+        @if (payment() === 'cartao' && quote(); as q) {
+          <label class="field installments">
+            <span>Parcelas</span>
+            <select class="input" name="installments" [(ngModel)]="form.installments">
+              @for (n of installmentOptions(q.max_installments); track n) {
+                <option [ngValue]="n">{{ n }}x de {{ q.total / n | money }} sem juros</option>
+              }
+            </select>
+            <small>O pagamento com cartão é feito pelo link enviado no WhatsApp ou na maquininha.</small>
+          </label>
+        }
+
+        <label class="field notes">
+          <span>Observações <small>(opcional)</small></span>
+          <textarea class="input" name="notes" [(ngModel)]="form.notes" placeholder="Ex.: troco para R$ 200, ponto de referência..."></textarea>
+        </label>
+      </section>
+    </div>
+
+    <aside class="summary card">
+      <h3>Seu pedido</h3>
+      @if (quote(); as q) {
+        <ul class="items">
+          @for (line of q.lines; track line.key) {
+            <li>
+              @if (line.image) {
+                <img [src]="line.image" alt="" />
+              }
+              <div>
+                <strong>{{ line.quantity }}x {{ line.name }}</strong>
+                <span class="muted small">{{ line.detail }}</span>
+              </div>
+              <span>{{ line.total | money }}</span>
+            </li>
+          }
+        </ul>
+        <app-cart-totals [quote]="q" />
+
+        @if (error()) {
+          <p class="error">{{ error() }}</p>
+        }
+        <button class="btn lg block" type="submit" [disabled]="sending() || !q.can_checkout">
+          @if (sending()) {
+            Enviando pedido...
+          } @else {
+            <app-icon name="check" [size]="18" /> Confirmar pedido
+          }
+        </button>
+        <label class="check remember">
+          <input type="checkbox" name="remember" [(ngModel)]="remember" />
+          <span>Lembrar meus dados neste aparelho</span>
+        </label>
+        <p class="muted small center">Ao confirmar, você recebe o código do pedido e as instruções de pagamento.
+          Seus dados são usados só para entregar o pedido, conforme a
+          <a routerLink="/privacidade" target="_blank" class="policy">Política de Privacidade</a>.</p>
+      } @else {
+        <div class="skeleton" style="height: 200px"></div>
+      }
+    </aside>
+  </form>
+</div>
