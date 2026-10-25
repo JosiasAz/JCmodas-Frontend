@@ -1,4 +1,4 @@
-# JC Moda Masculina — Site
+# JC Moda Masculina - Site
 
 Loja virtual da **JC Moda Masculina**, com vitrine, carrinho, checkout e painel administrativo.
 
