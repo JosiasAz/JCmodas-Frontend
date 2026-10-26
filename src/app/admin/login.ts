@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService, LoginResult, errorMessage } from '../core/auth';
+import { renderGoogleButton } from '../core/google-signin';
 
 @Component({
   selector: 'app-login',
@@ -26,6 +27,10 @@ import { AuthService, LoginResult, errorMessage } from '../core/auth';
             <p class="error">{{ error() }}</p>
           }
           <button class="btn lg block" type="submit" [disabled]="loading()">{{ loading() ? 'Entrando...' : 'Entrar' }}</button>
+          @if (googleClientId()) {
+            <div class="or small muted"><span>ou</span></div>
+            <div #googleButton class="google"></div>
+          }
           <a routerLink="/" class="back small muted">Voltar para a loja</a>
         </form>
       } @else {
@@ -68,6 +73,9 @@ import { AuthService, LoginResult, errorMessage } from '../core/auth';
     .error { color: var(--sale); font-weight: 600; font-size: .88rem; }
     .back { display: inline-block; margin-top: 16px; }
     .link { margin-top: 14px; }
+    .or { display: flex; align-items: center; gap: 10px; margin: 18px 0 14px; }
+    .or::before, .or::after { content: ''; flex: 1; border-top: 1px solid currentColor; opacity: .3; }
+    .google { display: flex; justify-content: center; min-height: 44px; }
   `,
 })
 export class Login {
@@ -81,6 +89,21 @@ export class Login {
   protected error = signal('');
   protected mfaToken = signal<string | null>(null);
   protected useRecovery = signal(false);
+  protected googleClientId = signal<string | null>(null);
+  private googleButton = viewChild<ElementRef<HTMLElement>>('googleButton');
+
+  constructor() {
+    this.auth.googleClientId().subscribe({ next: (res) => this.googleClientId.set(res.client_id), error: () => undefined });
+    // o botão some na tela do código e volta ao clicar em "Voltar": desenha de novo a cada vez
+    effect(() => {
+      const el = this.googleButton()?.nativeElement;
+      const clientId = this.googleClientId();
+      if (!el || !clientId) return;
+      renderGoogleButton(el, clientId, (credential) => this.run(this.auth.loginGoogle(credential))).catch((err: Error) =>
+        this.error.set(err.message),
+      );
+    });
+  }
 
   submit() {
     this.run(this.auth.login(this.email, this.password));

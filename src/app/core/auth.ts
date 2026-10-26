@@ -39,6 +39,18 @@ export class AuthService {
       .pipe(tap((res) => this.applyLogin(res)));
   }
 
+  /** ID do cliente do "Entrar com Google" (null quando o recurso está desligado na API). */
+  googleClientId() {
+    return this.http.get<{ client_id: string | null }>('/api/auth/google');
+  }
+
+  /** 1ª etapa pelo Google: a API confere o token e segue igual ao login com senha. */
+  loginGoogle(credential: string) {
+    return this.http
+      .post<LoginResult>('/api/auth/google', { credential })
+      .pipe(tap((res) => this.applyLogin(res)));
+  }
+
   /** 2ª etapa: código do app autenticador ou código de recuperação. */
   verifyMfa(mfaToken: string, code: string) {
     return this.http
