@@ -233,7 +233,11 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
   `,
   styles: `
     .wide { grid-column: 1 / -1; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; @media (max-width: 1000px) { grid-template-columns: 1fr; } }
+    /* minmax(0, ...): um conteúdo largo não estica o card para fora da tela no celular */
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;
+      @media (max-width: 1000px) { grid-template-columns: minmax(0, 1fr); }
+      > * { min-width: 0; } }
+    @media (max-width: 640px) { .card { padding: 16px; } }
     h3 { font-family: var(--font); font-size: 1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     .opt { font-style: normal; font-weight: 400; color: var(--muted); }
     small.ok { color: var(--ok); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; a { text-decoration: underline; margin-left: 4px; } }
@@ -252,12 +256,17 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
       p { margin: 2px 0 0; font-weight: 500; } .link { margin-top: 6px; padding: 0; } }
 
     .days { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
-    .day { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 2px 0; border-bottom: 1px solid var(--line);
+    .day { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 4px 0; border-bottom: 1px solid var(--line);
       &:last-child { border-bottom: 0; } }
-    .day-name { display: flex; align-items: center; gap: 10px; width: 92px; flex-shrink: 0; font-weight: 600; cursor: pointer; }
+    .day-name { display: flex; align-items: center; gap: 10px; width: 84px; flex-shrink: 0; font-weight: 600; cursor: pointer; }
     .closed .day-name { color: var(--muted); font-weight: 500; }
-    .times { display: flex; align-items: center; gap: 8px; }
-    .input.time { width: 108px; min-height: 40px; padding: 6px 10px; }
+    /* os campos de hora dividem o espaço que sobra em vez de ter largura fixa */
+    .times { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; max-width: 260px; }
+    .input.time { flex: 1; min-width: 0; width: auto; min-height: 40px; padding: 6px 8px; text-align: center;
+      font-variant-numeric: tabular-nums;
+      /* no celular o toque no campo já abre o relógio; o ícone só roubava espaço da hora */
+      @media (max-width: 640px) { &::-webkit-calendar-picker-indicator { display: none; } } }
+    .copy { overflow-wrap: anywhere; }
     .copy { margin-top: 8px; padding: 0; text-align: left; }
     .switch { appearance: none; width: 40px; height: 24px; border-radius: 99px; background: var(--line); position: relative;
       cursor: pointer; transition: background .15s; flex-shrink: 0; margin: 0;
