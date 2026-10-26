@@ -1,16 +1,26 @@
+<nav class="subtabs" aria-label="Catálogo">
+  <a routerLink="/admin/produtos" routerLinkActive="active">Produtos</a>
+  <a routerLink="/admin/categorias" routerLinkActive="active">Categorias</a>
+</nav>
 <div class="page-head">
   <div>
     <h1>Produtos</h1>
     <p class="muted">Cadastre peças, fotos, preços e estoque por tamanho.</p>
   </div>
   <div class="head-actions">
-    <label class="btn outline">
+    <label class="btn outline photo">
       <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden (change)="startWithPhotos($event)" />
       <app-icon name="camera" [size]="18" /> Cadastrar com fotos
     </label>
-    <button class="btn" (click)="open()"><app-icon name="plus" [size]="18" /> Novo produto</button>
+    <button class="btn new" (click)="open()"><app-icon name="plus" [size]="18" /> <span>Novo produto</span></button>
   </div>
 </div>
+
+<!-- celular: a ação do dia a dia (fotografar a peça) fica no polegar -->
+<label class="fab" aria-label="Cadastrar produto com fotos">
+  <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden (change)="startWithPhotos($event)" />
+  <app-icon name="camera" [size]="24" />
+</label>
 
 <div class="toolbar">
   <input class="input" placeholder="Buscar produto..." [ngModel]="search()" (ngModelChange)="search.set($event); pageNumber.set(1)" />

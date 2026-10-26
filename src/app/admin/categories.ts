@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Category } from '../core/models';
 import { Icon } from '../shared/icon';
 import { CrudPage } from './crud-page';
@@ -9,9 +10,13 @@ import { ImgPipe } from '../shared/img.pipe';
 
 @Component({
   selector: 'app-categories',
-  imports: [FormsModule, Icon, ImageInput, Pager, ImgPipe],
+  imports: [FormsModule, RouterLink, RouterLinkActive, Icon, ImageInput, Pager, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <nav class="subtabs" aria-label="Catálogo">
+      <a routerLink="/admin/produtos" routerLinkActive="active">Produtos</a>
+      <a routerLink="/admin/categorias" routerLinkActive="active">Categorias</a>
+    </nav>
     <div class="page-head">
       <div>
         <h1>Categorias</h1>

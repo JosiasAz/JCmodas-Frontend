@@ -113,7 +113,7 @@ export class Login {
           this.mfaToken.set(res.mfa_token); // senha certa: falta o código
           return;
         }
-        this.router.navigate([res.mfa_setup_required ? '/admin/usuarios' : '/admin']);
+        this.router.navigate([res.mfa_setup_required ? '/admin/conta' : '/admin']);
       },
       error: (err) => {
         this.loading.set(false);

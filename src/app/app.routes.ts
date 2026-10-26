@@ -27,7 +27,7 @@ export const routes: Routes = [
     canActivateChild: [adminGuard],
     loadComponent: () => import('./admin/admin-layout').then((m) => m.AdminLayout),
     children: [
-      { path: '', title: 'Resumo | Painel JC', loadComponent: () => import('./admin/dashboard').then((m) => m.Dashboard) },
+      { path: '', title: 'Início | Painel JC', loadComponent: () => import('./admin/dashboard').then((m) => m.Dashboard) },
       { path: 'pedidos', title: 'Pedidos | Painel JC', loadComponent: () => import('./admin/orders').then((m) => m.Orders) },
       { path: 'produtos', title: 'Produtos | Painel JC', loadComponent: () => import('./admin/products').then((m) => m.Products) },
       { path: 'categorias', title: 'Categorias | Painel JC', loadComponent: () => import('./admin/categories').then((m) => m.Categories) },
@@ -36,7 +36,8 @@ export const routes: Routes = [
       { path: 'combos', title: 'Combos | Painel JC', loadComponent: () => import('./admin/combos').then((m) => m.AdminCombos) },
       { path: 'anuncios', title: 'Anúncios | Painel JC', loadComponent: () => import('./admin/banners').then((m) => m.Banners) },
       { path: 'atividades', title: 'Atividades | Painel JC', loadComponent: () => import('./admin/audit').then((m) => m.Audit) },
-      { path: 'usuarios', title: 'Usuários | Painel JC', loadComponent: () => import('./admin/users').then((m) => m.Users) },
+      { path: 'usuarios', title: 'Equipe | Painel JC', loadComponent: () => import('./admin/users').then((m) => m.Users) },
+      { path: 'conta', title: 'Minha conta | Painel JC', loadComponent: () => import('./admin/account').then((m) => m.Account) },
       { path: 'configuracoes', title: 'Configurações | Painel JC', loadComponent: () => import('./admin/settings').then((m) => m.Settings) },
     ],
   },

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Category, Product, Variant } from '../core/models';
 import { Icon } from '../shared/icon';
 import { MoneyPipe } from '../shared/money.pipe';
@@ -18,7 +19,7 @@ const GRIDS = [
 
 @Component({
   selector: 'app-products',
-  imports: [FormsModule, Icon, MoneyPipe, ImageInput, Pager, ImgPipe],
+  imports: [FormsModule, RouterLink, RouterLinkActive, Icon, MoneyPipe, ImageInput, Pager, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './products.html',
   styles: `
@@ -35,6 +36,7 @@ const GRIDS = [
       .tag { position: absolute; top: 4px; left: 4px; font-size: .62rem; }
     }
     .head-actions { display: flex; gap: 8px; flex-wrap: wrap; label { cursor: pointer; } }
+    .fab { display: none; }
     .grid-buttons { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
     .grid-color { max-width: 160px; min-height: 36px; }
     .variants-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -45,7 +47,14 @@ const GRIDS = [
     .flags { display: flex; gap: 18px; flex-wrap: wrap; margin: 6px 0 12px; }
     .total-stock { font-size: .85rem; color: var(--muted); }
     @media (max-width: 720px) {
-      .head-actions { width: 100%; > * { flex: 1; } }
+      :host { display: block; padding-bottom: 56px; } /* o último cartão não fica atrás do botão da câmera */
+      .page-head > div:first-child { flex: 1 1 160px; }
+      .head-actions .photo { display: none; }
+      .head-actions .new { min-height: 44px; padding: 0 14px; font-size: .88rem; background: transparent; color: var(--ink); }
+      .fab { position: fixed; z-index: 50; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom));
+        display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; cursor: pointer;
+        background: var(--ink); color: #fff; box-shadow: 0 6px 20px rgb(0 0 0 / .25); -webkit-tap-highlight-color: transparent;
+        &:active { transform: scale(.95); } }
       .images { display: grid; grid-template-columns: repeat(3, 1fr); }
       .img { width: auto; height: auto; aspect-ratio: 4 / 5;
         button { padding: 6px 8px; font-size: .78rem; } }

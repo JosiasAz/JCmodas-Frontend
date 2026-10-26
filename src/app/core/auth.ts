@@ -6,7 +6,7 @@ import { catchError, tap, throwError } from 'rxjs';
 const TOKEN_KEY = 'jc-admin-token';
 const NAME_KEY = 'jc-admin-name';
 const MFA_KEY = 'jc-admin-mfa'; // "on" | "setup" (precisa ativar) | "off"
-const USERS_PAGE = '/admin/usuarios';
+const ACCOUNT_PAGE = '/admin/conta'; // onde se ativa a verificação em duas etapas
 export const MFA_SETUP_MESSAGE = 'Ative a verificação em duas etapas para usar o painel';
 
 /** Resposta do login: ou a sessão, ou o pedido do código de verificação em duas etapas. */
@@ -123,7 +123,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (err.status === 401 && isAdmin) auth.expire();
       if (err.status === 403 && isAdmin && err.error?.detail === MFA_SETUP_MESSAGE) {
         auth.setMfa('setup');
-        router.navigateByUrl(USERS_PAGE);
+        router.navigateByUrl(ACCOUNT_PAGE);
       }
       return throwError(() => err);
     }),
@@ -135,7 +135,7 @@ export const adminGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
   if (!auth.loggedIn()) return router.parseUrl('/admin/login');
-  if (auth.mfaSetupRequired() && !state.url.startsWith(USERS_PAGE)) return router.parseUrl(USERS_PAGE);
+  if (auth.mfaSetupRequired() && !state.url.startsWith(ACCOUNT_PAGE)) return router.parseUrl(ACCOUNT_PAGE);
   return true;
 };
 
