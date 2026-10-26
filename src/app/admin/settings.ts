@@ -85,6 +85,18 @@ import { ToastService } from '../core/toast.service';
             <button class="btn sm outline" type="button" (click)="useTemplate(f)">Carregar modelo para editar</button>
             <a class="btn sm ghost" href="/privacidade" target="_blank">Ver como fica</a>
           </div>
+
+          <h3 class="cleanup-title">Apagar dados de clientes antigos</h3>
+          <p class="muted small">A LGPD pede que a loja não guarde dados pessoais por mais tempo do que precisa.
+            Esta limpeza apaga <b>nome, telefone, e-mail e endereço</b> dos pedidos já <b>entregues ou cancelados</b>
+            há mais tempo do que o prazo escolhido. O valor, os produtos e o relatório de vendas continuam iguais.
+            Não é preciso fazer com frequência: uma vez por ano já basta.</p>
+          <div class="cleanup">
+            <label class="field"><span>Pedidos encerrados há mais de (meses)</span>
+              <input class="input" type="number" min="1" name="months" [(ngModel)]="months" inputmode="numeric" /></label>
+            <button class="btn sm outline" type="button" (click)="anonymize()" [disabled]="cleaning()">
+              {{ cleaning() ? 'Apagando...' : 'Apagar dados antigos' }}</button>
+          </div>
         </section>
 
         <div class="actions">
@@ -99,7 +111,10 @@ import { ToastService } from '../core/toast.service';
   styles: `
     .wide { grid-column: 1 / -1; }
     .policy { min-height: 260px; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
-    .policy-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .policy-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .cleanup-title { margin: 24px 0 8px; padding-top: 18px; border-top: 1px solid var(--line); }
+    .cleanup { display: flex; align-items: end; gap: 10px; flex-wrap: wrap;
+      .field { margin: 0; flex: 0 1 260px; } .btn { min-height: 46px; } }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; @media (max-width: 1000px) { grid-template-columns: 1fr; } }
     h3 { font-family: var(--font); font-size: 1rem; margin-bottom: 16px; }
     .actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 14px; flex-wrap: wrap;
@@ -115,6 +130,8 @@ export class Settings {
   protected form = signal<StoreSettings | null>(null);
   protected saving = signal(false);
   protected error = signal('');
+  protected months = 12;
+  protected cleaning = signal(false);
 
   constructor() {
     this.api.settings().subscribe((s) => this.form.set(s));
@@ -126,6 +143,27 @@ export class Settings {
     this.http
       .get<{ text: string }>('/api/privacy', { params: { template: 'true' } })
       .subscribe((p) => this.form.set({ ...f, privacy_policy: p.text }));
+  }
+
+  /** LGPD: apaga nome, telefone, e-mail e endereço de pedidos entregues/cancelados antigos. */
+  anonymize() {
+    const months = Number(this.months);
+    if (!Number.isInteger(months) || months < 1) return this.toast.error('Informe um número de meses (1 ou mais).');
+    const question =
+      `Apagar nome, telefone, e-mail e endereço dos pedidos entregues ou cancelados há mais de ${months} meses?\n` +
+      'Essa ação não pode ser desfeita. Valores e produtos dos pedidos continuam.';
+    if (!confirm(question)) return;
+    this.cleaning.set(true);
+    this.api.anonymizeOrders(months).subscribe({
+      next: (r) => {
+        this.cleaning.set(false);
+        this.toast.show(r.anonymized ? `Dados apagados de ${r.anonymized} pedido(s)` : 'Nenhum pedido tão antigo: nada foi apagado');
+      },
+      error: (err) => {
+        this.cleaning.set(false);
+        this.toast.error(errorMessage(err));
+      },
+    });
   }
 
   save(f: StoreSettings) {

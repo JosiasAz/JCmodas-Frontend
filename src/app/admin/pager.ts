@@ -1,19 +1,15 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
-/** "Anterior · Página X de Y · Próxima" das listas do painel (com uma página só, mostra apenas o total). */
+/** "Anterior · Página X de Y · Próxima" das listas do painel (com uma página só, os botões aparecem desativados). */
 @Component({
   selector: 'app-pager',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (total() > 0) {
       <div class="pager">
-        @if (pages() > 1) {
-          <button class="btn sm outline" [disabled]="page() === 1" (click)="pageChange.emit(page() - 1)">Anterior</button>
-          <span class="small">Página {{ page() }} de {{ pages() }} · {{ total() }} {{ noun() }}</span>
-          <button class="btn sm outline" [disabled]="page() === pages()" (click)="pageChange.emit(page() + 1)">Próxima</button>
-        } @else {
-          <span class="small muted">{{ total() }} {{ noun() }}</span>
-        }
+        <button class="btn sm outline" [disabled]="page() === 1" (click)="pageChange.emit(page() - 1)">Anterior</button>
+        <span class="small">Página {{ page() }} de {{ pages() }} · {{ total() }} {{ noun() }}</span>
+        <button class="btn sm outline" [disabled]="page() >= pages()" (click)="pageChange.emit(page() + 1)">Próxima</button>
       </div>
     }
   `,

@@ -22,6 +22,10 @@ const TABS: (MenuItem & { also?: string[] })[] = [
 // o resto: no celular fica na folha "Mais", sem repetir as abas
 const MORE: { title: string; items: MenuItem[] }[] = [
   {
+    title: 'Catálogo',
+    items: [{ label: 'Categorias', link: '/admin/categorias', icon: 'grid' }],
+  },
+  {
     title: 'Marketing',
     items: [
       { label: 'Promoções', link: '/admin/promocoes', icon: 'percent' },
@@ -103,8 +107,7 @@ const MORE: { title: string; items: MenuItem[] }[] = [
       @if (moreOpen()) {
         <div class="sheet-backdrop more-backdrop" (click)="moreOpen.set(false)">
           <div class="sheet more" role="dialog" aria-label="Mais opções" (click)="$event.stopPropagation()"
-            (touchstart)="dragFrom = $any($event).touches[0].clientY"
-            (touchend)="$any($event).changedTouches[0].clientY - dragFrom > 70 && moreOpen.set(false)">
+            (touchstart)="dragStart($event)" (touchend)="dragEnd($event)">
             <div class="sheet-handle" aria-hidden="true"></div>
             @for (group of more; track group.title) {
               <span class="sheet-label">{{ group.title }}</span>
@@ -198,7 +201,7 @@ export class AdminLayout {
   protected auth = inject(AuthService);
   private router = inject(Router);
   protected moreOpen = signal(false);
-  protected dragFrom = 0;
+  private dragFrom = 0;
 
   protected tabs = TABS;
   protected more = MORE;
@@ -217,7 +220,7 @@ export class AdminLayout {
         { label: 'Categorias', link: '/admin/categorias', icon: 'grid' },
       ],
     },
-    ...MORE,
+    ...MORE.slice(1), // "Catálogo" da folha já está no grupo acima
   ];
 
   private url = toSignal(
@@ -235,6 +238,16 @@ export class AdminLayout {
     const tab = TABS.find((t) => t.link !== '/admin' && [t.link, ...(t.also ?? [])].some((l) => path.startsWith(l)));
     return tab?.link ?? 'more';
   });
+
+  // arrastar a folha "Mais" para baixo fecha. Os métodos não devolvem nada de propósito:
+  // um handler que devolve false faz o Angular cancelar o toque, e aí nenhum botão da folha responde.
+  dragStart(e: TouchEvent) {
+    this.dragFrom = e.touches[0].clientY;
+  }
+
+  dragEnd(e: TouchEvent) {
+    if (e.changedTouches[0].clientY - this.dragFrom > 70) this.moreOpen.set(false);
+  }
 
   protected onAccount = computed(() => this.url().startsWith('/admin/conta'));
   protected myInitials = computed(() => initials(this.auth.name() ?? '?'));

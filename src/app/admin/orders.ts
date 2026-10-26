@@ -31,9 +31,6 @@ const NEXT: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>>
         <h1>Pedidos</h1>
         <p class="muted">Acompanhe e atualize o andamento de cada venda.</p>
       </div>
-      <button class="btn outline sm" (click)="anonymize()" title="LGPD: apaga dados pessoais de pedidos antigos já encerrados">
-        <app-icon name="shield" [size]="15" /> Anonimizar pedidos antigos
-      </button>
     </div>
 
     <div class="tabs">
@@ -146,7 +143,6 @@ export class Orders {
   protected status = signal<OrderStatus | null>(null);
   protected search = signal('');
   protected pageNumber = signal(1);
-  private refresh = signal(0);
   protected page = signal<OrderPage | null>(null);
   protected selected = signal<Order | null>(null);
 
@@ -154,7 +150,6 @@ export class Orders {
     ...(this.status() ? { status: this.status()! } : {}),
     ...(this.search().trim() ? { q: this.search().trim() } : {}),
     page: this.pageNumber(),
-    _: this.refresh(), // força recarregar a lista
   }));
 
   constructor() {
@@ -162,24 +157,6 @@ export class Orders {
     effect((onCleanup) => {
       const sub = this.api.orders(this.query()).subscribe((p) => this.page.set(p));
       onCleanup(() => sub.unsubscribe());
-    });
-  }
-
-  /** LGPD: apaga nome, telefone, e-mail e endereço de pedidos entregues/cancelados antigos. */
-  anonymize() {
-    const answer = prompt(
-      'Anonimizar pedidos ENTREGUES ou CANCELADOS com mais de quantos meses?\n' +
-        'Nome, telefone, e-mail e endereço serão apagados; valores e produtos ficam.',
-      '12',
-    );
-    const months = Number(answer);
-    if (!answer || !Number.isInteger(months) || months < 1) return;
-    this.api.anonymizeOrders(months).subscribe({
-      next: (r) => {
-        this.toast.show(r.anonymized ? `${r.anonymized} pedido(s) anonimizado(s)` : 'Nenhum pedido antigo para anonimizar');
-        this.refresh.update((n) => n + 1);
-      },
-      error: (err) => this.toast.error(errorMessage(err)),
     });
   }
 

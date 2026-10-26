@@ -549,6 +549,7 @@ table.table {
       padding-left: 42%;
       text-align: right;
       overflow-wrap: anywhere; /* e-mail ou texto longo quebra em vez de estourar o cartão */
+      min-height: 32px; /* célula vazia não deixa o rótulo encavalar na linha de baixo */
       &::before {
         content: attr(data-label);
         position: absolute;
