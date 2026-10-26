@@ -20,7 +20,7 @@ Os dados são fornecidos pela API da loja, mantida em um repositório separado.
 - Gestão de pedidos, produtos, categorias, promoções, cupons, combos e anúncios
 - Gestão de usuários com autenticação em duas etapas
 - Histórico de alterações
-- Configurações da loja (contato, frete, pagamento e política de privacidade)
+- Configurações da loja (WhatsApp colado em qualquer formato, endereço pelo CEP, horário por dia da semana, frete, pagamento e privacidade)
 
 ## Tecnologias
 

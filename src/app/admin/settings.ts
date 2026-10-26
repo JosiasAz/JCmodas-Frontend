@@ -1,51 +1,168 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../core/admin-api.service';
 import { errorMessage } from '../core/auth';
 import { StoreSettings } from '../core/models';
 import { StoreService } from '../core/store.service';
 import { ToastService } from '../core/toast.service';
+import { Icon } from '../shared/icon';
+import {
+  AddressParts,
+  DayHours,
+  WEEKDAYS,
+  emptyAddress,
+  formatAddress,
+  formatHours,
+  formatWhatsapp,
+  isAddressComplete,
+  isValidWhatsapp,
+  normalizeInstagram,
+  normalizeWhatsapp,
+  parseAddress,
+  parseHours,
+} from './settings-format';
+
+const HOURS_MAX = 120; // tamanho da coluna no banco
+const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (services/privacy.py)
 
 @Component({
   selector: 'app-settings',
-  imports: [FormsModule],
+  imports: [FormsModule, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page-head">
       <div>
         <h1>Configurações</h1>
-        <p class="muted">Contato, frete, Pix e parcelamento.</p>
+        <p class="muted">Contato, endereço, horário, frete e pagamento.</p>
       </div>
     </div>
 
     @if (form(); as f) {
       <form class="grid" (ngSubmit)="save(f)">
         <section class="card">
-          <h3>Loja</h3>
-          <label class="field"><span>Nome da loja</span><input class="input" name="store_name" [(ngModel)]="f.store_name" required /></label>
+          <h3><app-icon name="whatsapp" [size]="18" /> Contato</h3>
           <label class="field">
-            <span>Aviso no topo do site</span>
-            <input class="input" name="announcement" [(ngModel)]="f.announcement" maxlength="160" />
-            <small>Ex.: Frete grátis acima de R$ 299 · 5% OFF no Pix. Deixe vazio para esconder.</small>
+            <span>WhatsApp da loja</span>
+            <input class="input" type="tel" inputmode="tel" name="whatsapp" autocomplete="tel"
+              placeholder="Cole aqui o número" [ngModel]="whatsappText()" (ngModelChange)="whatsappText.set($event)"
+              (blur)="tidyWhatsapp()" (paste)="tidyWhatsappSoon()" />
+            @if (!whatsappText().trim()) {
+              <small>Copie o número no WhatsApp e cole aqui do jeito que vier, com +55, espaços ou traços. A gente arruma.</small>
+            } @else if (whatsappOk()) {
+              <small class="ok"><app-icon name="check" [size]="14" /> Número certo.
+                <a [href]="'https://wa.me/' + whatsappDigits()" target="_blank" rel="noopener">Testar no WhatsApp</a></small>
+            } @else {
+              <small class="bad">Confira o número: precisa ter o DDD, ex.: (92) 99329-9773.</small>
+            }
           </label>
-          <label class="field"><span>Endereço</span><input class="input" name="address" [(ngModel)]="f.address" /></label>
-          <label class="field"><span>Horário de funcionamento</span><input class="input" name="hours" [(ngModel)]="f.opening_hours" /></label>
+          <label class="field">
+            <span>Instagram</span>
+            <div class="prefix">
+              <span>&#64;</span>
+              <input class="input" name="instagram" [(ngModel)]="f.instagram" (blur)="f.instagram = tidyInstagram(f.instagram)"
+                placeholder="jcmodamasculina" autocapitalize="off" />
+            </div>
+            <small>Pode colar o link do perfil também.</small>
+          </label>
+          <label class="field">
+            <span>E-mail <em class="opt">(opcional)</em></span>
+            <input class="input" type="email" name="email" [(ngModel)]="f.email" autocomplete="email" placeholder="contato@exemplo.com" />
+          </label>
         </section>
 
         <section class="card">
-          <h3>Contato</h3>
-          <label class="field">
-            <span>WhatsApp (com DDI e DDD)</span>
-            <input class="input" name="whatsapp" [(ngModel)]="f.whatsapp" placeholder="5592999999999" />
-            <small>Só números. Usado no botão flutuante e para receber os pedidos.</small>
-          </label>
-          <label class="field"><span>Instagram</span><input class="input" name="instagram" [(ngModel)]="f.instagram" placeholder="jcmodamasculina" /></label>
-          <label class="field"><span>E-mail</span><input class="input" name="email" [(ngModel)]="f.email" /></label>
+          <h3><app-icon name="pin" [size]="18" /> Endereço da loja</h3>
+          <div class="cep-row">
+            <label class="field">
+              <span>CEP</span>
+              <input class="input" name="cep" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code"
+                [ngModel]="addr().cep" (ngModelChange)="onCep($event)" />
+            </label>
+            <span class="cep-status small">
+              @switch (cepStatus()) {
+                @case ('loading') { Buscando endereço... }
+                @case ('error') { <span class="bad">CEP não encontrado. Confira os números.</span> }
+                @default {
+                  <a href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" rel="noopener">Não sei o CEP</a>
+                }
+              }
+            </span>
+          </div>
+
+          @if (addr().city) {
+            <label class="field"><span>Rua</span>
+              <input class="input" name="street" [ngModel]="addr().street" (ngModelChange)="setAddr('street', $event)" /></label>
+            <div class="row num-row">
+              <label class="field"><span>Número</span>
+                <input #numberInput class="input" name="number" inputmode="numeric" [ngModel]="addr().number"
+                  (ngModelChange)="setAddr('number', $event)" placeholder="s/n" /></label>
+              <label class="field"><span>Complemento <em class="opt">(opcional)</em></span>
+                <input class="input" name="complement" maxlength="40" [ngModel]="addr().complement"
+                  (ngModelChange)="setAddr('complement', $event)" placeholder="Loja 2, sala 3..." /></label>
+            </div>
+            <label class="field"><span>Bairro</span>
+              <input class="input" name="district" [ngModel]="addr().district" (ngModelChange)="setAddr('district', $event)" /></label>
+            <p class="city small"><app-icon name="pin" [size]="14" /> {{ addr().city }}/{{ addr().state }}</p>
+          } @else if (legacyAddress()) {
+            <p class="note small">Endereço atual: <b>{{ legacyAddress() }}</b><br />Digite o CEP para atualizar e deixar no formato certo.</p>
+          } @else {
+            <p class="muted small">Digite o CEP e o resto do endereço é preenchido sozinho.</p>
+          }
+
+          @if (addressPreview(); as preview) {
+            <div class="preview">
+              <span class="small muted">Como aparece no site</span>
+              <p>{{ preview }}</p>
+              <button type="button" class="link small" (click)="clearAddress()">Não mostrar endereço no site</button>
+            </div>
+          }
         </section>
 
         <section class="card">
-          <h3>Entrega</h3>
+          <h3><app-icon name="clock" [size]="18" /> Horário de funcionamento</h3>
+          <p class="muted small">Ligue os dias em que a loja abre e escolha o horário.</p>
+          <div class="days">
+            @for (d of week(); track $index; let i = $index) {
+              <div class="day" [class.closed]="!d.open">
+                <label class="day-name">
+                  <input type="checkbox" class="switch" [name]="'open' + i" [ngModel]="d.open" (ngModelChange)="setDay(i, { open: $event })" />
+                  {{ weekdays[i] }}
+                </label>
+                @if (d.open) {
+                  <div class="times">
+                    <input class="input time" type="time" [name]="'from' + i" [ngModel]="d.from" (ngModelChange)="setDay(i, { from: $event })" />
+                    <span class="muted">às</span>
+                    <input class="input time" type="time" [name]="'to' + i" [ngModel]="d.to" (ngModelChange)="setDay(i, { to: $event })" />
+                  </div>
+                } @else {
+                  <span class="muted small">Fechado</span>
+                }
+              </div>
+            }
+          </div>
+          @if (firstOpenDay() >= 0) {
+            <button type="button" class="link small copy" (click)="copyHours()">
+              Usar o horário de {{ weekdays[firstOpenDay()] }} em todos os dias abertos</button>
+          }
+          <div class="preview">
+            <span class="small muted">Como aparece no site</span>
+            <p>{{ hoursPreview() || 'Nenhum dia aberto: o horário não aparece no site.' }}</p>
+          </div>
+        </section>
+
+        <section class="card">
+          <h3><app-icon name="megaphone" [size]="18" /> Aviso no topo do site</h3>
+          <label class="field">
+            <span>Texto do aviso <em class="opt">(opcional)</em></span>
+            <input class="input" name="announcement" [(ngModel)]="f.announcement" maxlength="160"
+              placeholder="Frete grátis acima de R$ 299 · 5% OFF no Pix" />
+            <small>Aparece numa faixa no topo de todas as páginas. Deixe vazio para esconder.</small>
+          </label>
+        </section>
+
+        <section class="card">
+          <h3><app-icon name="truck" [size]="18" /> Entrega</h3>
           <div class="row">
             <label class="field"><span>Taxa de entrega (R$)</span><input class="input" type="number" step="0.01" min="0" name="fee" [(ngModel)]="f.shipping_fee" /></label>
             <label class="field"><span>Frete grátis acima de (R$)</span><input class="input" type="number" step="0.01" min="0" name="free" [(ngModel)]="f.free_shipping_min" />
@@ -55,7 +172,17 @@ import { ToastService } from '../core/toast.service';
         </section>
 
         <section class="card">
-          <h3>Pedidos e estoque</h3>
+          <h3><app-icon name="pix" [size]="18" /> Pagamento</h3>
+          <div class="row">
+            <label class="field"><span>Desconto no Pix (%)</span><input class="input" type="number" step="0.5" min="0" max="99" name="pix_pct" [(ngModel)]="f.pix_discount_percent" /></label>
+            <label class="field"><span>Parcelas sem juros</span><input class="input" type="number" min="1" max="12" name="inst" [(ngModel)]="f.max_installments" /></label>
+          </div>
+          <label class="field"><span>Chave Pix</span><input class="input" name="pix_key" [(ngModel)]="f.pix_key" />
+            <small>Mostrada ao cliente depois que ele finaliza o pedido.</small></label>
+        </section>
+
+        <section class="card wide">
+          <h3><app-icon name="box" [size]="18" /> Pedidos e estoque</h3>
           <div class="row">
             <label class="field"><span>Cancelar pedido não pago depois de (horas)</span>
               <input class="input" type="number" min="0" max="720" name="hold" [(ngModel)]="f.order_hold_hours" />
@@ -66,37 +193,33 @@ import { ToastService } from '../core/toast.service';
           </div>
         </section>
 
-        <section class="card">
-          <h3>Pagamento</h3>
-          <div class="row">
-            <label class="field"><span>Desconto no Pix (%)</span><input class="input" type="number" step="0.5" min="0" max="99" name="pix_pct" [(ngModel)]="f.pix_discount_percent" /></label>
-            <label class="field"><span>Parcelas sem juros</span><input class="input" type="number" min="1" max="12" name="inst" [(ngModel)]="f.max_installments" /></label>
-          </div>
-          <label class="field"><span>Chave Pix</span><input class="input" name="pix_key" [(ngModel)]="f.pix_key" />
-            <small>Mostrada ao cliente depois que ele finaliza o pedido.</small></label>
-        </section>
-
         <section class="card wide">
-          <h3>Política de privacidade (LGPD)</h3>
-          <p class="muted small">Aparece em /privacidade e no checkout. Use "## " para títulos e "- " para listas.
-            Enquanto ficar vazio, a loja mostra o modelo padrão.</p>
-          <textarea class="input policy" name="privacy" [(ngModel)]="f.privacy_policy" placeholder="(usando o modelo padrão)"></textarea>
-          <div class="policy-actions">
-            <button class="btn sm outline" type="button" (click)="useTemplate(f)">Carregar modelo para editar</button>
-            <a class="btn sm ghost" href="/privacidade" target="_blank">Ver como fica</a>
+          <h3><app-icon name="shield" [size]="18" /> Privacidade dos clientes (LGPD)</h3>
+          <div class="auto">
+            <app-icon name="check" [size]="20" />
+            <div>
+              <b>Está tudo pronto, você não precisa fazer nada.</b>
+              <p>A lei de proteção de dados (LGPD) pede que a loja explique o que faz com os dados dos clientes e
+                não guarde esses dados para sempre. A loja já cuida disso sozinha:</p>
+              <ul>
+                <li>A <b>política de privacidade</b> é montada automaticamente com o nome, o endereço e o contato da loja,
+                  e aparece no site e no checkout. <a href="/privacidade" target="_blank">Ver a política</a></li>
+                <li><b>Nome, telefone, e-mail e endereço</b> dos clientes são apagados sozinhos {{ retentionMonths }} meses depois
+                  que o pedido é entregue ou cancelado. Os valores e os produtos continuam no relatório de vendas.</li>
+              </ul>
+            </div>
           </div>
-
-          <h3 class="cleanup-title">Apagar dados de clientes antigos</h3>
-          <p class="muted small">A LGPD pede que a loja não guarde dados pessoais por mais tempo do que precisa.
-            Esta limpeza apaga <b>nome, telefone, e-mail e endereço</b> dos pedidos já <b>entregues ou cancelados</b>
-            há mais tempo do que o prazo escolhido. O valor, os produtos e o relatório de vendas continuam iguais.
-            Não é preciso fazer com frequência: uma vez por ano já basta.</p>
-          <div class="cleanup">
-            <label class="field"><span>Pedidos encerrados há mais de (meses)</span>
-              <input class="input" type="number" min="1" name="months" [(ngModel)]="months" inputmode="numeric" /></label>
-            <button class="btn sm outline" type="button" (click)="anonymize()" [disabled]="cleaning()">
-              {{ cleaning() ? 'Apagando...' : 'Apagar dados antigos' }}</button>
-          </div>
+          <details class="custom" [open]="!!f.privacy_policy?.trim()">
+            <summary>Quero escrever minha própria política (opcional)</summary>
+            <p class="muted small">Enquanto ficar vazio, vale a política automática. Use "## " para títulos e "- " para listas.</p>
+            <textarea class="input policy" name="privacy" [(ngModel)]="f.privacy_policy" placeholder="(usando a política automática)"></textarea>
+            <div class="policy-actions">
+              <button class="btn sm outline" type="button" (click)="useTemplate(f)">Começar a partir da automática</button>
+              @if (f.privacy_policy?.trim()) {
+                <button class="btn sm ghost" type="button" (click)="f.privacy_policy = ''">Voltar a usar a automática</button>
+              }
+            </div>
+          </details>
         </section>
 
         <div class="actions">
@@ -110,13 +233,48 @@ import { ToastService } from '../core/toast.service';
   `,
   styles: `
     .wide { grid-column: 1 / -1; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; @media (max-width: 1000px) { grid-template-columns: 1fr; } }
+    h3 { font-family: var(--font); font-size: 1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .opt { font-style: normal; font-weight: 400; color: var(--muted); }
+    small.ok { color: var(--ok); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; a { text-decoration: underline; margin-left: 4px; } }
+    .bad, small.bad { color: var(--sale); }
+
+    .prefix { position: relative;
+      > span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+      .input { padding-left: 32px; } }
+
+    .cep-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      .field { flex: 0 1 180px; } .cep-status { padding-top: 8px; } a { text-decoration: underline; } }
+    .num-row { --cols: 2; @media (max-width: 640px) { grid-template-columns: 1fr 1fr; } }
+    .city { display: flex; align-items: center; gap: 6px; font-weight: 600; margin-top: -4px; }
+    .note { background: var(--warn-soft); border-radius: var(--radius-sm); padding: 10px 12px; line-height: 1.5; }
+    .preview { margin-top: 14px; padding: 12px 14px; background: var(--bg); border-radius: var(--radius-sm);
+      p { margin: 2px 0 0; font-weight: 500; } .link { margin-top: 6px; padding: 0; } }
+
+    .days { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+    .day { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 2px 0; border-bottom: 1px solid var(--line);
+      &:last-child { border-bottom: 0; } }
+    .day-name { display: flex; align-items: center; gap: 10px; width: 92px; flex-shrink: 0; font-weight: 600; cursor: pointer; }
+    .closed .day-name { color: var(--muted); font-weight: 500; }
+    .times { display: flex; align-items: center; gap: 8px; }
+    .input.time { width: 108px; min-height: 40px; padding: 6px 10px; }
+    .copy { margin-top: 8px; padding: 0; text-align: left; }
+    .switch { appearance: none; width: 40px; height: 24px; border-radius: 99px; background: var(--line); position: relative;
+      cursor: pointer; transition: background .15s; flex-shrink: 0; margin: 0;
+      &::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+        background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / .25); transition: transform .15s; }
+      &:checked { background: var(--ink); &::after { transform: translateX(16px); } }
+      &:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; } }
+
+    .auto { display: flex; gap: 12px; padding: 14px 16px; background: var(--ok-soft); border-radius: var(--radius-sm); line-height: 1.5;
+      > app-icon { color: var(--ok); flex-shrink: 0; margin-top: 2px; }
+      p { margin: 4px 0 6px; } ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; } a { text-decoration: underline; } }
+    .custom { margin-top: 16px;
+      summary { cursor: pointer; font-weight: 600; font-size: .92rem; padding: 6px 0; }
+      .muted { margin: 6px 0 10px; } }
     .policy { min-height: 260px; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
     .policy-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-    .cleanup-title { margin: 24px 0 8px; padding-top: 18px; border-top: 1px solid var(--line); }
-    .cleanup { display: flex; align-items: end; gap: 10px; flex-wrap: wrap;
-      .field { margin: 0; flex: 0 1 260px; } .btn { min-height: 46px; } }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; @media (max-width: 1000px) { grid-template-columns: 1fr; } }
-    h3 { font-family: var(--font); font-size: 1rem; margin-bottom: 16px; }
+
     .actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 14px; flex-wrap: wrap;
       @media (max-width: 720px) { .btn { width: 100%; } } }
   `,
@@ -127,52 +285,164 @@ export class Settings {
   private store = inject(StoreService);
   private http = inject(HttpClient);
 
+  protected readonly weekdays = WEEKDAYS;
+  protected readonly retentionMonths = RETENTION_MONTHS;
+
   protected form = signal<StoreSettings | null>(null);
   protected saving = signal(false);
   protected error = signal('');
-  protected months = 12;
-  protected cleaning = signal(false);
+
+  protected whatsappText = signal('');
+  protected week = signal<DayHours[]>([]);
+  protected addr = signal<AddressParts>(emptyAddress());
+  /** endereço escrito à mão antes desta tela existir (fica valendo até digitar um CEP) */
+  protected legacyAddress = signal<string | null>(null);
+  protected cepStatus = signal<'' | 'loading' | 'error'>('');
+  private numberInput = viewChild<ElementRef<HTMLInputElement>>('numberInput');
 
   constructor() {
-    this.api.settings().subscribe((s) => this.form.set(s));
+    this.api.settings().subscribe((s) => this.load(s));
   }
 
-  /** Preenche o campo com o modelo de política (dados da loja já inseridos) para o lojista completar. */
+  private load(s: StoreSettings) {
+    this.form.set(s);
+    this.whatsappText.set(formatWhatsapp(s.whatsapp));
+    this.week.set(parseHours(s.opening_hours));
+    const parsed = parseAddress(s.address);
+    this.addr.set(parsed ?? emptyAddress());
+    this.legacyAddress.set(parsed ? null : s.address.trim() || null);
+  }
+
+  // ---------------------------------------------------------------- contato
+
+  protected whatsappDigits() {
+    return normalizeWhatsapp(this.whatsappText());
+  }
+
+  protected whatsappOk() {
+    return isValidWhatsapp(this.whatsappDigits());
+  }
+
+  /** Ao sair do campo, mostra o número no formato padrão. */
+  tidyWhatsapp() {
+    if (this.whatsappOk()) this.whatsappText.set(formatWhatsapp(this.whatsappDigits()));
+  }
+
+  /** Colou: arruma assim que o texto entra no campo. */
+  tidyWhatsappSoon() {
+    setTimeout(() => this.tidyWhatsapp());
+  }
+
+  tidyInstagram(text: string) {
+    return normalizeInstagram(text);
+  }
+
+  // ---------------------------------------------------------------- endereço
+
+  onCep(text: string) {
+    const digits = text.replace(/\D/g, '').slice(0, 8);
+    const cep = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+    this.addr.update((a) => ({ ...a, cep }));
+    this.cepStatus.set('');
+    if (digits.length === 8) this.lookupCep(digits);
+  }
+
+  private lookupCep(digits: string) {
+    this.cepStatus.set('loading');
+    this.http.get<any>(`https://viacep.com.br/ws/${digits}/json/`).subscribe({
+      next: (r) => {
+        if (r.erro) return this.cepStatus.set('error');
+        this.cepStatus.set('');
+        this.addr.update((a) => ({
+          ...a,
+          street: r.logradouro || '',
+          district: r.bairro || '',
+          city: r.localidade || '',
+          state: r.uf || '',
+        }));
+        // falta só o número: leva o cursor para lá
+        setTimeout(() => this.numberInput()?.nativeElement.focus());
+      },
+      error: () => this.cepStatus.set('error'),
+    });
+  }
+
+  setAddr(key: keyof AddressParts, value: string) {
+    this.addr.update((a) => ({ ...a, [key]: value }));
+  }
+
+  protected addressPreview() {
+    const a = this.addr();
+    return isAddressComplete(a) ? formatAddress(a) : this.legacyAddress();
+  }
+
+  clearAddress() {
+    this.addr.set(emptyAddress());
+    this.legacyAddress.set(null);
+    this.cepStatus.set('');
+  }
+
+  // ---------------------------------------------------------------- horário
+
+  setDay(index: number, change: Partial<DayHours>) {
+    this.week.update((w) => w.map((d, i) => (i === index ? { ...d, ...change } : d)));
+  }
+
+  protected firstOpenDay() {
+    return this.week().findIndex((d) => d.open);
+  }
+
+  copyHours() {
+    const source = this.week()[this.firstOpenDay()];
+    this.week.update((w) => w.map((d) => (d.open ? { ...d, from: source.from, to: source.to } : d)));
+  }
+
+  protected hoursPreview() {
+    return formatHours(this.week());
+  }
+
+  // ---------------------------------------------------------------- privacidade
+
+  /** Copia a política automática (já com os dados da loja) para o lojista editar. */
   useTemplate(f: StoreSettings) {
-    if (f.privacy_policy?.trim() && !confirm('Substituir o texto atual pelo modelo?')) return;
+    if (f.privacy_policy?.trim() && !confirm('Substituir o texto atual pela política automática?')) return;
     this.http
       .get<{ text: string }>('/api/privacy', { params: { template: 'true' } })
       .subscribe((p) => this.form.set({ ...f, privacy_policy: p.text }));
   }
 
-  /** LGPD: apaga nome, telefone, e-mail e endereço de pedidos entregues/cancelados antigos. */
-  anonymize() {
-    const months = Number(this.months);
-    if (!Number.isInteger(months) || months < 1) return this.toast.error('Informe um número de meses (1 ou mais).');
-    const question =
-      `Apagar nome, telefone, e-mail e endereço dos pedidos entregues ou cancelados há mais de ${months} meses?\n` +
-      'Essa ação não pode ser desfeita. Valores e produtos dos pedidos continuam.';
-    if (!confirm(question)) return;
-    this.cleaning.set(true);
-    this.api.anonymizeOrders(months).subscribe({
-      next: (r) => {
-        this.cleaning.set(false);
-        this.toast.show(r.anonymized ? `Dados apagados de ${r.anonymized} pedido(s)` : 'Nenhum pedido tão antigo: nada foi apagado');
-      },
-      error: (err) => {
-        this.cleaning.set(false);
-        this.toast.error(errorMessage(err));
-      },
-    });
+  // ---------------------------------------------------------------- salvar
+
+  /** Junta os campos simples da tela no texto que a loja guarda; devolve o erro, se houver. */
+  private collect(f: StoreSettings): string | null {
+    const whatsapp = this.whatsappDigits();
+    if (whatsapp && !isValidWhatsapp(whatsapp)) return 'Confira o WhatsApp: precisa ter o DDD, ex.: (92) 99329-9773.';
+
+    const a = this.addr();
+    if (isAddressComplete(a)) f.address = formatAddress(a);
+    else if (a.cep) return 'Complete o endereço: confira o CEP e a rua, ou toque em "Não mostrar endereço no site".';
+    else f.address = this.legacyAddress() ?? '';
+
+    const hours = this.hoursPreview();
+    if (hours.length > HOURS_MAX) return 'Horários muito diferentes em cada dia: use o mesmo horário em mais dias para caber no site.';
+    if (this.week().some((d) => d.open && d.from >= d.to)) return 'Confira o horário: a hora de fechar precisa ser depois da de abrir.';
+
+    f.whatsapp = whatsapp;
+    f.instagram = normalizeInstagram(f.instagram);
+    f.opening_hours = hours;
+    return null;
   }
 
   save(f: StoreSettings) {
+    const problem = this.collect(f);
+    this.error.set(problem ?? '');
+    if (problem) return;
     this.saving.set(true);
-    this.error.set('');
     this.api.saveSettings(f).subscribe({
       next: (s) => {
         this.saving.set(false);
         this.store.settings.set(s);
+        this.load(s);
         this.toast.show('Configurações salvas');
       },
       error: (err) => {

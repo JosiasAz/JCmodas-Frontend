@@ -92,10 +92,6 @@ export class AdminApiService {
     return this.http.post<{ access_token: string; name: string }>(`${this.base}/me/mfa/disable`, { password, code });
   }
 
-  anonymizeOrders(months: number) {
-    return this.http.post<{ anonymized: number }>(`${this.base}/orders/anonymize`, { months });
-  }
-
   settings() {
     return this.http.get<StoreSettings>(`${this.base}/settings`);
   }
