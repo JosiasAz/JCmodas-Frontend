@@ -27,11 +27,13 @@ import { Icon } from '../shared/icon';
         </div>
       </aside>
 
+      @if (menuOpen()) {
+        <div class="scrim" (click)="menuOpen.set(false)"></div>
+      }
       <div class="content">
         <header class="topbar">
-          <button class="icon-btn" (click)="menuOpen.set(!menuOpen())" aria-label="Menu"><app-icon name="menu" /></button>
           <img src="logo/jc-logo-horizontal.svg" alt="JC Moda" />
-          <span></span>
+          <a routerLink="/" target="_blank" class="icon-btn" aria-label="Ver loja"><app-icon name="external" /></a>
         </header>
         @if (!auth.mfaEnabled()) {
           <a routerLink="/admin/usuarios" fragment="mfa" class="mfa-banner">
@@ -43,6 +45,19 @@ import { Icon } from '../shared/icon';
         }
         <main><router-outlet /></main>
       </div>
+
+      <!-- celular: atalhos para o que mais se usa no dia a dia; o resto fica em "Mais" -->
+      <nav class="tabbar" aria-label="Atalhos">
+        @for (item of tabs; track item.link) {
+          <a [routerLink]="item.link" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.link === '/admin' }"
+            (click)="menuOpen.set(false)">
+            <app-icon [name]="item.icon" [size]="22" /><span>{{ item.label }}</span>
+          </a>
+        }
+        <button type="button" [class.active]="menuOpen()" (click)="menuOpen.set(!menuOpen())">
+          <app-icon name="menu" [size]="22" /><span>Mais</span>
+        </button>
+      </nav>
     </div>
   `,
   styles: `
@@ -62,19 +77,39 @@ import { Icon } from '../shared/icon';
       border-radius: var(--radius); background: var(--warn-soft); color: #6b4106; font-size: .9rem;
       span { flex: 1; } &:hover { text-decoration: underline; } }
     main { padding: 28px clamp(16px, 3vw, 36px) 60px; max-width: 1280px; }
-    .topbar { display: none; }
+    .topbar, .tabbar { display: none; }
     @media (max-width: 900px) {
       .shell { grid-template-columns: 1fr; }
-      .side { position: fixed; z-index: 90; left: 0; width: 260px; transform: translateX(-100%); transition: transform .2s; }
-      .side.open { transform: none; box-shadow: 0 0 0 100vmax rgb(0 0 0 / .4); }
-      .topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 40;
-        img { height: 32px; } span { width: 40px; } }
+      .side { position: fixed; z-index: 90; left: 0; width: 270px; transform: translateX(-100%); transition: transform .2s;
+        padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+      .side.open { transform: none; }
+      .scrim { position: fixed; inset: 0; z-index: 89; background: rgb(0 0 0 / .4); animation: fade .15s; }
+      nav a { padding: 12px; font-size: 1rem; }
+      .topbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 8px 16px;
+        padding-top: calc(8px + env(safe-area-inset-top)); background: #fff; border-bottom: 1px solid var(--line);
+        position: sticky; top: 0; z-index: 40;
+        img { height: 30px; } }
+      main { padding: 18px 16px calc(100px + env(safe-area-inset-bottom)); }
+      .mfa-banner { margin: 12px 16px 0; }
+      .tabbar { position: fixed; z-index: 95; inset: auto 0 0; display: grid; grid-template-columns: repeat(4, 1fr);
+        padding-bottom: env(safe-area-inset-bottom); background: #fff; border-top: 1px solid var(--line);
+        box-shadow: 0 -4px 16px rgb(0 0 0 / .05);
+        a, button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 60px;
+          border: 0; background: none; color: var(--muted); font-size: .72rem; font-weight: 600; cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
+          &.active { color: var(--ink); } } }
     }
   `,
 })
 export class AdminLayout {
   protected auth = inject(AuthService);
   protected menuOpen = signal(false);
+
+  protected tabs = [
+    { label: 'Resumo', link: '/admin', icon: 'chart' },
+    { label: 'Pedidos', link: '/admin/pedidos', icon: 'box' },
+    { label: 'Produtos', link: '/admin/produtos', icon: 'tag' },
+  ];
 
   protected menu = [
     {

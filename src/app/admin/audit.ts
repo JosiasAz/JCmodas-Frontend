@@ -75,16 +75,16 @@ const ALERT = new Set(['login_falhou', 'mfa_falhou', 'codigo_recuperacao_usado',
         <tbody>
           @for (a of page()?.items; track a.id) {
             <tr [class.alert]="isAlert(a)">
-              <td class="small nowrap">{{ a.created_at + 'Z' | date: 'dd/MM/yy HH:mm' }}</td>
-              <td>{{ a.user_email || '—' }}</td>
-              <td>
+              <td class="small nowrap cell-main">{{ a.created_at + 'Z' | date: 'dd/MM/yy HH:mm' }}</td>
+              <td data-label="Quem">{{ a.user_email || '—' }}</td>
+              <td data-label="Ação">
                 <span class="status" [class.off]="isAlert(a)">{{ actionLabel(a.action) }}</span>
                 @if (a.entity) {
                   <span class="muted small"> {{ entityLabel(a.entity) }}{{ a.entity_id ? ' #' + a.entity_id : '' }}</span>
                 }
               </td>
-              <td class="small">{{ a.summary }}</td>
-              <td class="small muted">{{ a.ip }}</td>
+              <td class="small" data-label="Detalhe">{{ a.summary }}</td>
+              <td class="small muted" data-label="IP">{{ a.ip }}</td>
             </tr>
           } @empty {
             <tr><td colspan="5" class="empty">{{ page() ? 'Nenhuma atividade encontrada.' : 'Carregando...' }}</td></tr>

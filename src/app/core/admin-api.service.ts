@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, concat, of, tap } from 'rxjs';
+import { Observable, concat, from, of, switchMap, tap } from 'rxjs';
 import { AuthService } from './auth';
+import { shrinkImage } from './image-resize';
 import { Dashboard, Order, OrderPage, OrderStatus, StoreSettings } from './models';
 
 export type Resource = 'categories' | 'products' | 'promotions' | 'coupons' | 'combos' | 'banners' | 'users';
@@ -49,9 +50,13 @@ export class AdminApiService {
   }
 
   upload(file: File) {
-    const form = new FormData();
-    form.append('file', file);
-    return this.http.post<{ url: string }>(`${this.base}/uploads`, form);
+    return from(shrinkImage(file)).pipe(
+      switchMap((image) => {
+        const form = new FormData();
+        form.append('file', image);
+        return this.http.post<{ url: string }>(`${this.base}/uploads`, form);
+      }),
+    );
   }
 
   dashboard(days = 30) {

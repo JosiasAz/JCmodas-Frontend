@@ -33,9 +33,9 @@ function randomPassword() {
         <tbody>
           @for (u of pageRows(); track u.id) {
             <tr>
-              <td><b>{{ u.name }}</b> @if (u.is_me) { <span class="badge soft">Você</span> }</td>
-              <td>{{ u.email }}</td>
-              <td><span class="status" [class.on]="u.mfa_enabled" [class.off]="!u.mfa_enabled">{{ u.mfa_enabled ? 'Ativa' : 'Desativada' }}</span></td>
+              <td class="cell-main"><b>{{ u.name }}</b> @if (u.is_me) { <span class="badge soft">Você</span> }</td>
+              <td data-label="E-mail">{{ u.email }}</td>
+              <td data-label="Duas etapas"><span class="status" [class.on]="u.mfa_enabled" [class.off]="!u.mfa_enabled">{{ u.mfa_enabled ? 'Ativa' : 'Desativada' }}</span></td>
               <td class="actions">
                 <button class="icon-btn" (click)="open(u)" aria-label="Editar"><app-icon name="edit" [size]="17" /></button>
                 @if (!u.is_me) {
@@ -182,7 +182,7 @@ function randomPassword() {
     .mine { margin-top: 22px; h3 { display: flex; align-items: center; gap: 8px; font-family: var(--font); font-size: 1rem; } }
     .mine-foot { grid-column: 1 / -1; display: flex; align-items: center; justify-content: flex-end; gap: 14px; flex-wrap: wrap;
       .form-error { margin: 0; } }
-    .pass { display: flex; gap: 6px; .input { flex: 1; } }
+    .pass { display: flex; flex-wrap: wrap; gap: 6px; .input { flex: 1 1 200px; } }
     .steps { padding-left: 20px; line-height: 1.7; margin: 0 0 12px; a { text-decoration: underline; } }
     .secret { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;
       code { font-size: 1.05rem; letter-spacing: .08em; padding: 8px 12px; background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; } }

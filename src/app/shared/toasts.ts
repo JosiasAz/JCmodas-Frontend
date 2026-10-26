@@ -22,7 +22,7 @@ import { Icon } from './icon';
   `,
   styles: `
     .toasts {
-      position: fixed; z-index: 200; left: 50%; bottom: 24px; transform: translateX(-50%);
+      position: fixed; z-index: 200; left: 50%; bottom: var(--toast-bottom, 24px); transform: translateX(-50%);
       display: flex; flex-direction: column; gap: 8px; width: min(440px, calc(100% - 32px));
     }
     .toast {

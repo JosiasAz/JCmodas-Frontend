@@ -3,7 +3,13 @@
     <h1>Produtos</h1>
     <p class="muted">Cadastre peças, fotos, preços e estoque por tamanho.</p>
   </div>
-  <button class="btn" (click)="open()"><app-icon name="plus" [size]="18" /> Novo produto</button>
+  <div class="head-actions">
+    <label class="btn outline">
+      <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden (change)="startWithPhotos($event)" />
+      <app-icon name="camera" [size]="18" /> Cadastrar com fotos
+    </label>
+    <button class="btn" (click)="open()"><app-icon name="plus" [size]="18" /> Novo produto</button>
+  </div>
 </div>
 
 <div class="toolbar">
@@ -24,12 +30,12 @@
     <tbody>
       @for (p of pageRows(); track p.id) {
         <tr>
-          <td><img class="thumb" [src]="p.images[0] | img" alt="" /></td>
-          <td>
+          <td class="cell-thumb"><img class="thumb" [src]="p.images[0] | img" alt="" /></td>
+          <td class="cell-main">
             <span class="name">{{ p.name }}</span>
             <span class="muted small">{{ p.category_name || 'Sem categoria' }}</span>
           </td>
-          <td>
+          <td data-label="Preço">
             @if (p.final_price < p.price) {
               <s class="muted small">{{ p.price | money }}</s><br />
               <b style="color: var(--sale)">{{ p.final_price | money }}</b>
@@ -37,9 +43,9 @@
               {{ p.price | money }}
             }
           </td>
-          <td [class.stock-zero]="p.stock === 0">{{ p.stock === 0 ? 'Esgotado' : p.stock + ' un.' }}</td>
-          <td>{{ p.sold_count }}</td>
-          <td>
+          <td data-label="Estoque" [class.stock-zero]="p.stock === 0">{{ p.stock === 0 ? 'Esgotado' : p.stock + ' un.' }}</td>
+          <td data-label="Vendidos">{{ p.sold_count }}</td>
+          <td data-label="Status">
             <button class="status" [class.on]="p.active" [class.off]="!p.active" (click)="toggleActive(p)" style="border: 0; cursor: pointer"
               title="Clique para mostrar/esconder na loja">
               {{ p.active ? 'Na loja' : 'Escondido' }}
@@ -82,11 +88,11 @@
       <div class="row">
         <label class="field">
           <span>Preço de venda (R$)</span>
-          <input class="input" type="number" step="0.01" min="0" name="price" [(ngModel)]="d.price" required />
+          <input class="input" type="number" inputmode="decimal" step="0.01" min="0" name="price" [(ngModel)]="d.price" required />
         </label>
         <label class="field">
           <span>Preço "de" (R$) <small>opcional</small></span>
-          <input class="input" type="number" step="0.01" min="0" name="compare" [(ngModel)]="d.compare_at_price" />
+          <input class="input" type="number" inputmode="decimal" step="0.01" min="0" name="compare" [(ngModel)]="d.compare_at_price" />
           <small>Aparece riscado ao lado do preço.</small>
         </label>
       </div>
@@ -102,6 +108,9 @@
       </div>
 
       <h3 class="form-section">Fotos</h3>
+      @if (photoUploads()) {
+        <p class="small muted">Enviando {{ photoUploads() }} foto{{ photoUploads() > 1 ? 's' : '' }}...</p>
+      }
       <div class="images">
         @for (img of d.images; track img; let i = $index) {
           <div class="img" [class.cover]="i === 0">
@@ -124,7 +133,7 @@
 
       <h3 class="form-section">Tamanhos e estoque</h3>
       <div class="grid-buttons">
-        <input class="input" style="max-width: 160px; min-height: 36px" name="gridColor" [(ngModel)]="gridColor" placeholder="Cor (opcional)" />
+        <input class="input grid-color" name="gridColor" [(ngModel)]="gridColor" placeholder="Cor (opcional)" />
         @for (g of grids; track g.label) {
           <button type="button" class="btn sm outline" (click)="addGrid(d, g.sizes)">+ {{ g.label }}</button>
         }
@@ -137,14 +146,14 @@
               <tr>
                 <td><input class="input" [name]="'size' + i" [(ngModel)]="v.size" required /></td>
                 <td><input class="input" [name]="'color' + i" [(ngModel)]="v.color" placeholder="-" /></td>
-                <td><input class="input" type="number" min="0" [name]="'stock' + i" [(ngModel)]="v.stock" /></td>
+                <td><input class="input" type="number" inputmode="numeric" min="0" [name]="'stock' + i" [(ngModel)]="v.stock" /></td>
                 <td><button type="button" class="icon-btn" (click)="d.variants.splice(i, 1)" aria-label="Remover"><app-icon name="trash" [size]="16" /></button></td>
               </tr>
             }
           </tbody>
         </table>
       }
-      <div style="display: flex; justify-content: space-between; align-items: center">
+      <div class="variants-foot">
         <button type="button" class="link small" (click)="addVariant(d)">+ Adicionar tamanho</button>
         <span class="total-stock">Total em estoque: <b>{{ totalStock(d) }}</b></span>
       </div>

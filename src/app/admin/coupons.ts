@@ -26,12 +26,12 @@ import { Pager } from './pager';
         <tbody>
           @for (c of pageRows(); track c.id) {
             <tr>
-              <td><code class="code">{{ c.code }}</code><br /><span class="muted small">{{ c.description }}</span></td>
-              <td>{{ c.kind === 'percent' ? c.value + '%' : c.kind === 'fixed' ? (c.value | money) : 'Frete grátis' }}</td>
-              <td>{{ c.min_order ? (c.min_order | money) : '-' }}</td>
-              <td>{{ c.used_count }}{{ c.max_uses ? ' / ' + c.max_uses : '' }}</td>
-              <td class="small">{{ c.ends_at ? 'até ' + (c.ends_at | date: 'dd/MM/yy') : 'Sem validade' }}</td>
-              <td><span class="status" [class.on]="c.active" [class.off]="!c.active">{{ c.active ? 'Ativo' : 'Pausado' }}</span></td>
+              <td class="cell-main"><code class="code">{{ c.code }}</code><br /><span class="muted small">{{ c.description }}</span></td>
+              <td data-label="Desconto">{{ c.kind === 'percent' ? c.value + '%' : c.kind === 'fixed' ? (c.value | money) : 'Frete grátis' }}</td>
+              <td data-label="Pedido mínimo">{{ c.min_order ? (c.min_order | money) : '-' }}</td>
+              <td data-label="Usos">{{ c.used_count }}{{ c.max_uses ? ' / ' + c.max_uses : '' }}</td>
+              <td class="small" data-label="Validade">{{ c.ends_at ? 'até ' + (c.ends_at | date: 'dd/MM/yy') : 'Sem validade' }}</td>
+              <td data-label="Status"><span class="status" [class.on]="c.active" [class.off]="!c.active">{{ c.active ? 'Ativo' : 'Pausado' }}</span></td>
               <td class="actions">
                 <button class="icon-btn" (click)="open(c)" aria-label="Editar"><app-icon name="edit" [size]="17" /></button>
                 <button class="icon-btn" (click)="remove(c, c.code)" aria-label="Excluir"><app-icon name="trash" [size]="17" /></button>

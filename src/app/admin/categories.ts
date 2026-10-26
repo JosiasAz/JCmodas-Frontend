@@ -26,15 +26,15 @@ import { ImgPipe } from '../shared/img.pipe';
         <tbody>
           @for (c of pageRows(); track c.id) {
             <tr>
-              <td>
+              <td class="cell-thumb">
                 @if (c.image) {
                   <img class="thumb" [src]="c.image | img" alt="" style="border-radius: 50%; width: 44px; height: 44px" />
                 }
               </td>
-              <td><b>{{ c.name }}</b><br /><span class="muted small">/loja?categoria={{ c.slug }}</span></td>
-              <td>{{ c.product_count }}</td>
-              <td>{{ c.sort }}</td>
-              <td><span class="status" [class.on]="c.active" [class.off]="!c.active">{{ c.active ? 'Visível' : 'Oculta' }}</span></td>
+              <td class="cell-main"><b>{{ c.name }}</b><br /><span class="muted small">/loja?categoria={{ c.slug }}</span></td>
+              <td data-label="Produtos">{{ c.product_count }}</td>
+              <td data-label="Ordem">{{ c.sort }}</td>
+              <td data-label="Status"><span class="status" [class.on]="c.active" [class.off]="!c.active">{{ c.active ? 'Visível' : 'Oculta' }}</span></td>
               <td class="actions">
                 <button class="icon-btn" (click)="open(c)" aria-label="Editar"><app-icon name="edit" [size]="17" /></button>
                 <button class="icon-btn" (click)="remove(c, c.name)" aria-label="Excluir"><app-icon name="trash" [size]="17" /></button>

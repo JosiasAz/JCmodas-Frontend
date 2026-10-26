@@ -52,13 +52,13 @@ const NEXT: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>>
         <tbody>
           @for (o of page()?.items; track o.id) {
             <tr (click)="selected.set(o)" class="clickable">
-              <td><b>{{ o.code }}</b></td>
-              <td class="small">{{ o.created_at | date: 'dd/MM HH:mm' }}</td>
-              <td>{{ o.customer_name }}<br /><span class="muted small">{{ o.phone }}</span></td>
-              <td>{{ itemCount(o) }}</td>
-              <td><b>{{ o.total | money }}</b></td>
-              <td class="small">{{ paymentLabel[o.payment_method] }}<br /><span class="muted">{{ o.delivery_method === 'entrega' ? 'Entrega' : 'Retirada' }}</span></td>
-              <td><span class="status" [class]="'status ' + o.status">{{ statusLabel[o.status] }}</span></td>
+              <td class="cell-main"><b>{{ o.code }}</b></td>
+              <td class="small" data-label="Data">{{ o.created_at | date: 'dd/MM HH:mm' }}</td>
+              <td data-label="Cliente">{{ o.customer_name }}<br /><span class="muted small">{{ o.phone }}</span></td>
+              <td data-label="Itens">{{ itemCount(o) }}</td>
+              <td data-label="Total"><b>{{ o.total | money }}</b></td>
+              <td class="small" data-label="Pagamento">{{ paymentLabel[o.payment_method] }}<br /><span class="muted">{{ o.delivery_method === 'entrega' ? 'Entrega' : 'Retirada' }}</span></td>
+              <td class="cell-status"><span class="status" [class]="'status ' + o.status">{{ statusLabel[o.status] }}</span></td>
             </tr>
           } @empty {
             <tr><td colspan="7" class="empty">{{ page() ? 'Nenhum pedido encontrado.' : 'Carregando...' }}</td></tr>

@@ -27,20 +27,20 @@ import { ImgPipe } from '../shared/img.pipe';
         <tbody>
           @for (c of pageRows(); track c.id) {
             <tr>
-              <td>
+              <td class="cell-thumb">
                 @if (c.image) {
                   <img class="thumb" [src]="c.image | img" alt="" />
                 }
               </td>
-              <td><b>{{ c.name }}</b></td>
-              <td class="small">
+              <td class="cell-main"><b>{{ c.name }}</b></td>
+              <td class="small" data-label="Peças">
                 @for (i of c.items; track i.product_id) {
                   {{ i.quantity }}x {{ i.product.name }}<br />
                 }
               </td>
-              <td><s class="muted small">{{ c.original_price | money }}</s><br /><b>{{ c.price | money }}</b></td>
-              <td style="color: var(--ok); font-weight: 600">{{ c.savings | money }}</td>
-              <td><span class="status" [class.on]="c.active" [class.off]="!c.active">{{ c.active ? 'Ativo' : 'Pausado' }}</span></td>
+              <td data-label="Preço"><s class="muted small">{{ c.original_price | money }}</s><br /><b>{{ c.price | money }}</b></td>
+              <td data-label="Economia" style="color: var(--ok); font-weight: 600">{{ c.savings | money }}</td>
+              <td data-label="Status"><span class="status" [class.on]="c.active" [class.off]="!c.active">{{ c.active ? 'Ativo' : 'Pausado' }}</span></td>
               <td class="actions">
                 <button class="icon-btn" (click)="open(c)" aria-label="Editar"><app-icon name="edit" [size]="17" /></button>
                 <button class="icon-btn" (click)="remove(c, c.name)" aria-label="Excluir"><app-icon name="trash" [size]="17" /></button>

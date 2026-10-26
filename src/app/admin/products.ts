@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Category, Product, Variant } from '../core/models';
 import { Icon } from '../shared/icon';
 import { MoneyPipe } from '../shared/money.pipe';
+import { errorMessage } from '../core/auth';
 import { CrudPage } from './crud-page';
 import { ImageInput } from './image-input';
 import { Pager } from './pager';
@@ -33,13 +34,25 @@ const GRIDS = [
       button { border: 0; background: none; cursor: pointer; font-size: .7rem; font-weight: 600; padding: 2px 4px; }
       .tag { position: absolute; top: 4px; left: 4px; font-size: .62rem; }
     }
+    .head-actions { display: flex; gap: 8px; flex-wrap: wrap; label { cursor: pointer; } }
     .grid-buttons { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+    .grid-color { max-width: 160px; min-height: 36px; }
+    .variants-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
     .variants { width: 100%; border-collapse: collapse; margin-bottom: 8px;
       th { text-align: left; font-size: .75rem; color: var(--muted); padding: 4px 6px; }
       td { padding: 4px 6px; }
       .input { min-height: 38px; padding: 6px 10px; } }
     .flags { display: flex; gap: 18px; flex-wrap: wrap; margin: 6px 0 12px; }
     .total-stock { font-size: .85rem; color: var(--muted); }
+    @media (max-width: 720px) {
+      .head-actions { width: 100%; > * { flex: 1; } }
+      .images { display: grid; grid-template-columns: repeat(3, 1fr); }
+      .img { width: auto; height: auto; aspect-ratio: 4 / 5;
+        button { padding: 6px 8px; font-size: .78rem; } }
+      .grid-buttons { .grid-color { max-width: none; flex-basis: 100%; } .btn { flex: 1; } }
+      .variants .icon-btn { width: 36px; }
+      .flags { flex-direction: column; gap: 12px; }
+    }
   `,
 })
 export class Products extends CrudPage<Product> {
@@ -50,6 +63,8 @@ export class Products extends CrudPage<Product> {
   protected search = signal('');
   protected categoryFilter = signal<number | null>(null);
   protected gridColor = '';
+  /** Fotos do atalho "Cadastrar com fotos" ainda subindo. */
+  protected photoUploads = signal(0);
 
   /** ?editar=ID abre o produto direto (link do alerta de estoque baixo) */
   readonly editar = input<string>();
@@ -116,6 +131,28 @@ export class Products extends CrudPage<Product> {
   makeCover(form: any, index: number) {
     const [img] = form.images.splice(index, 1);
     form.images.unshift(img);
+  }
+
+  /** Atalho do celular: escolhe/tira as fotos primeiro e já abre o cadastro com elas. */
+  startWithPhotos(event: Event) {
+    const files = Array.from((event.target as HTMLInputElement).files ?? []);
+    (event.target as HTMLInputElement).value = '';
+    if (!files.length) return;
+    this.open();
+    for (const file of files) {
+      this.photoUploads.update((n) => n + 1);
+      this.api.upload(file).subscribe({
+        next: ({ url }) => {
+          this.photoUploads.update((n) => n - 1);
+          // só entra no cadastro novo (se a gaveta foi fechada ou trocada por outro produto, a foto fica de fora)
+          this.draft.update((d) => (d && !d.id ? { ...d, images: [...d.images, url] } : d));
+        },
+        error: (err) => {
+          this.photoUploads.update((n) => n - 1);
+          this.toast.error(errorMessage(err));
+        },
+      });
+    }
   }
 
   toggleActive(p: Product) {

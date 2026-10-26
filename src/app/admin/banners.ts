@@ -145,7 +145,7 @@ const PALETTES = [
     }
   `,
   styles: `
-    .banner-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+    .banner-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap: 14px; }
     .banner-item { padding: 0; overflow: hidden; }
     .mini { display: flex; justify-content: space-between; gap: 10px; padding: 18px; min-height: 110px;
       div { display: flex; flex-direction: column; gap: 4px; } strong { font-family: var(--font-display); font-size: 1.15rem; }

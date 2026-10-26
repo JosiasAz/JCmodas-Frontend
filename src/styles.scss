@@ -471,3 +471,163 @@ table.table {
   font-weight: 600;
   font-size: 0.88rem;
 }
+
+/* ------------------------------------------------------------- painel no celular */
+
+@media (max-width: 720px) {
+  /* 16px nos campos: abaixo disso o iPhone dá zoom na tela ao tocar no campo */
+  .input,
+  input.input,
+  select.input,
+  textarea.input {
+    font-size: 16px;
+  }
+
+  .page-head {
+    align-items: stretch;
+    margin-bottom: 16px;
+    h1 { font-size: 1.5rem; }
+    > .btn:not(.outline) { width: 100%; }
+  }
+
+  .toolbar .input { max-width: none; flex: 1 1 100%; }
+
+  /* tabelas viram cartões: cada célula mostra o nome da coluna (data-label) à esquerda */
+  .table-wrap {
+    overflow: visible;
+    background: none;
+    border: 0;
+  }
+
+  table.table {
+    display: block;
+
+    thead { display: none; }
+    tbody { display: grid; gap: 10px; }
+
+    tr {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      column-gap: 12px;
+      padding: 12px 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+    tbody tr:hover { background: #fff; }
+    tr.clickable:active { background: #fcfbf9; }
+
+    td {
+      grid-column: 1 / -1;
+      padding: 5px 0;
+      border-bottom: 1px dashed var(--line);
+    }
+    tr td:last-child,
+    tr td:has(+ .actions:last-child),
+    tr td:has(+ .cell-status:last-child) { border-bottom: 0; }
+
+    /* etiqueta de status no canto do cartão (pedidos) */
+    .cell-status {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      padding: 0;
+      border: 0;
+    }
+
+    td[data-label] {
+      position: relative;
+      padding-left: 42%;
+      text-align: right;
+      &::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        top: 5px;
+        max-width: 40%;
+        text-align: left;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 600;
+      }
+    }
+
+    /* linha de título do cartão: foto (se houver) + nome; os botões ficam no canto */
+    .cell-thumb {
+      grid-column: 1;
+      grid-row: 1;
+      border: 0;
+      padding: 0;
+      &:empty { display: none; }
+    }
+    .cell-main {
+      grid-row: 1;
+      align-self: center;
+      padding: 0 84px 8px 0;
+      border-bottom-style: solid;
+      font-size: 0.98rem;
+      .muted { display: block; }
+    }
+    tr:has(> .cell-thumb:not(:empty)) .cell-main { grid-column: 2; }
+    tr:has(> .actions) .cell-main { min-height: 44px; }
+    tr:not(:has(> .actions)) .cell-main { padding-right: 0; }
+
+    .actions {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      padding: 0;
+      border: 0;
+      display: flex;
+      .icon-btn { width: 40px; height: 40px; }
+    }
+
+    td.empty,
+    td[colspan] {
+      padding: 40px 10px;
+      text-align: center;
+      border: 0;
+    }
+  }
+
+  .pager {
+    flex-wrap: wrap;
+    gap: 8px !important;
+    > span { order: -1; flex-basis: 100%; text-align: center; }
+    .btn { flex: 1; }
+  }
+
+  /* gaveta de edição ocupa a tela toda; os botões ficam presos embaixo, ao alcance do polegar */
+  .modal {
+    width: 100%;
+    padding: 16px 16px 0;
+    animation: rise 0.2s ease-out;
+
+    .modal-head {
+      position: sticky;
+      top: -16px;
+      z-index: 2;
+      margin: -16px -16px 14px;
+      padding: 10px 8px 10px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      h2 { font-size: 1.2rem; }
+    }
+    .modal-foot {
+      bottom: 0;
+      flex-wrap: wrap;
+      margin: 20px -16px 0;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      .btn, select { flex: 1; }
+      .btn:only-child { flex-basis: 100%; }
+    }
+  }
+}
+
+@keyframes rise { from { transform: translateY(24px); opacity: 0; } }
+
+/* avisos (toasts) acima da barra de atalhos do painel no celular */
+@media (max-width: 900px) {
+  body:has(.tabbar) { --toast-bottom: calc(84px + env(safe-area-inset-bottom)); }
+}

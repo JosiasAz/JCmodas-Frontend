@@ -26,13 +26,13 @@ import { Pager } from './pager';
         <tbody>
           @for (p of pageRows(); track p.id) {
             <tr>
-              <td><b>{{ p.name }}</b><br /><span class="badge sale">{{ p.badge }}</span></td>
-              <td>{{ describe(p) }}</td>
-              <td>{{ scopeLabel(p) }}</td>
-              <td class="small">
+              <td class="cell-main"><b>{{ p.name }}</b><br /><span class="badge sale">{{ p.badge }}</span></td>
+              <td data-label="Desconto">{{ describe(p) }}</td>
+              <td data-label="Vale para">{{ scopeLabel(p) }}</td>
+              <td class="small" data-label="Período">
                 {{ p.starts_at ? (p.starts_at | date: 'dd/MM HH:mm') : 'Já' }} → {{ p.ends_at ? (p.ends_at | date: 'dd/MM HH:mm') : 'sem fim' }}
               </td>
-              <td><span class="status" [class.on]="p.running" [class.off]="!p.running">{{ p.running ? 'Rodando' : 'Pausada' }}</span></td>
+              <td data-label="Status"><span class="status" [class.on]="p.running" [class.off]="!p.running">{{ p.running ? 'Rodando' : 'Pausada' }}</span></td>
               <td class="actions">
                 <button class="icon-btn" (click)="open(p)" aria-label="Editar"><app-icon name="edit" [size]="17" /></button>
                 <button class="icon-btn" (click)="remove(p, p.name)" aria-label="Excluir"><app-icon name="trash" [size]="17" /></button>

@@ -102,7 +102,8 @@ import { ToastService } from '../core/toast.service';
     .policy-actions { display: flex; gap: 8px; margin-top: 10px; }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; @media (max-width: 1000px) { grid-template-columns: 1fr; } }
     h3 { font-family: var(--font); font-size: 1rem; margin-bottom: 16px; }
-    .actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 14px; }
+    .actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 14px; flex-wrap: wrap;
+      @media (max-width: 720px) { .btn { width: 100%; } } }
   `,
 })
 export class Settings {
