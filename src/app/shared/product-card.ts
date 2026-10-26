@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ApiService } from '../core/api.service';
 import { Product } from '../core/models';
 import { StoreService } from '../core/store.service';
 import { MoneyPipe } from './money.pipe';
@@ -11,7 +12,8 @@ import { ImgPipe } from './img.pipe';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @let p = product();
-    <a class="card" [routerLink]="['/produto', p.slug]" [class.soldout]="p.stock === 0">
+    <a class="card" [routerLink]="['/produto', p.slug]" [class.soldout]="p.stock === 0"
+      (pointerdown)="prefetch()" (mouseenter)="prefetch()">
       <div class="media">
         <img [src]="p.images[0] | img" [alt]="p.name" loading="lazy" />
         @if (p.images[1]) {
@@ -83,4 +85,10 @@ export class ProductCard {
   protected extraBadges = computed(() =>
     this.product().badges.filter((b) => !(this.product().discount_percent && /%/.test(b))).slice(0, 2),
   );
+  private api = inject(ApiService);
+
+  /** Começa a buscar o produto quando o dedo encosta (ou o mouse passa): a página abre já preenchida. */
+  prefetch() {
+    this.api.prefetchProduct(this.product().slug);
+  }
 }

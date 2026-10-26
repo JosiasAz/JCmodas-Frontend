@@ -6,6 +6,10 @@
 
 main {
   flex: 1;
+  // reserva a altura da tela: na troca de página o rodapé não sobe enquanto o conteúdo novo monta
+  // (sem isso ele "pula" para o meio da tela e volta, a sensação de página recarregando)
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .announcement {
