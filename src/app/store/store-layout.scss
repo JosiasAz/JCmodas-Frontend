@@ -208,11 +208,39 @@ main {
     box-shadow: var(--shadow);
   }
 
+  padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+
   nav {
     display: flex;
     flex-direction: column;
     gap: 2px;
     flex: 1;
+  }
+
+  // acesso do lojista: no pé do menu, separado das opções de compra
+  .drawer-seller {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 60px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    -webkit-tap-highlight-color: transparent;
+    > span {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.3;
+    }
+    small {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    &:active {
+      background: var(--bg);
+    }
   }
   nav a {
     display: flex;
@@ -306,8 +334,24 @@ main {
     @media (max-width: 900px) {
       grid-template-columns: 1fr 1fr;
     }
+    // celular: "Comprar" e "Pagamento" lado a lado; atendimento embaixo, na largura toda
     @media (max-width: 520px) {
-      grid-template-columns: 1fr;
+      gap: 28px 16px;
+      padding-top: 36px;
+      padding-bottom: 28px;
+      .about {
+        grid-column: 1 / -1;
+      }
+      .buy {
+        order: 1;
+      }
+      .pay {
+        order: 2;
+      }
+      .contact {
+        order: 3;
+        grid-column: 1 / -1;
+      }
     }
   }
 
@@ -329,6 +373,18 @@ main {
     display: flex;
     flex-direction: column;
     gap: 9px;
+    @media (max-width: 520px) {
+      gap: 2px;
+      // área de toque confortável para o dedo
+      a,
+      span {
+        min-height: 40px;
+      }
+    }
+  }
+
+  .about p {
+    margin: 0;
   }
 
   a,
@@ -345,19 +401,71 @@ main {
   .legal {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 12px 24px;
+    flex-wrap: wrap;
     padding-top: 18px;
     padding-bottom: 22px;
     border-top: 1px solid #2c2c2c;
     font-size: 0.8rem;
-    color: #8f8b84;
+    color: #a8a49d;
+    @media (min-width: 721px) {
+      padding-right: 104px; // não fica embaixo do botão flutuante do WhatsApp
+    }
+  }
+
+  .legal-links {
+    display: flex;
+    align-items: center;
+    gap: 8px 20px;
+    flex-wrap: wrap;
+  }
+
+  .seller {
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid #4a4a4a;
+    border-radius: 999px;
+    color: #fff;
+    font-weight: 600;
+    &:hover {
+      border-color: #fff;
+    }
+  }
+
+  // celular: tudo centralizado e em linhas separadas; espaço no fim para o botão do WhatsApp não cobrir nada
+  @media (max-width: 720px) {
+    .legal {
+      flex-direction: column-reverse;
+      align-items: stretch;
+      text-align: center;
+      padding-top: 22px;
+      padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    }
+    .legal-links {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      a {
+        justify-content: center;
+        min-height: 44px;
+      }
+    }
+    .seller {
+      font-size: 0.92rem;
+    }
+    .copy {
+      justify-content: center;
+    }
   }
 }
 
 .whatsapp-float {
   position: fixed;
   right: 20px;
-  bottom: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
   z-index: 60;
+  -webkit-tap-highlight-color: transparent;
   display: grid;
   place-items: center;
   width: 58px;

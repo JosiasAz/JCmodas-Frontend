@@ -12,6 +12,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
+import { AuthService } from '../core/auth';
 import { CartService } from '../core/cart.service';
 import { StoreService } from '../core/store.service';
 import { Icon } from '../shared/icon';
@@ -33,6 +34,7 @@ export class StoreLayout {
   protected search = '';
   protected searchOpen = signal(false);
   protected menuOpen = signal(false);
+  protected auth = inject(AuthService);
   protected year = new Date().getFullYear();
   private searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInput');
 

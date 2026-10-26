@@ -79,6 +79,11 @@
       <app-icon name="whatsapp" [size]="18" /> Falar no WhatsApp
     </a>
   }
+  <a routerLink="/admin" class="drawer-seller" [attr.tabindex]="menuOpen() ? 0 : -1">
+    <app-icon name="user" [size]="18" />
+    <span><b>{{ auth.loggedIn() ? 'Abrir o painel da loja' : 'Área do lojista' }}</b><small>Entrar para gerenciar produtos e pedidos</small></span>
+    <app-icon name="right" [size]="18" />
+  </a>
 </aside>
 
 <main>
@@ -92,7 +97,7 @@
       <p>Roupas masculinas com caimento, qualidade e preço justo. Compre online e receba em casa{{ store.settings()?.pickup_enabled ? ' ou retire na loja' : '' }}.</p>
     </div>
 
-    <div>
+    <div class="buy">
       <h4>Comprar</h4>
       <a routerLink="/loja">Todos os produtos</a>
       <a routerLink="/loja" [queryParams]="{ promo: 1 }">Promoções</a>
@@ -101,7 +106,7 @@
     </div>
 
     @if (store.settings(); as s) {
-      <div [hidden]="!s.whatsapp && !s.instagram && !s.opening_hours && !s.address">
+      <div class="contact" [hidden]="!s.whatsapp && !s.instagram && !s.opening_hours && !s.address">
         <h4>Atendimento</h4>
         @if (s.whatsapp) {
           <a [href]="whatsappHelp()" target="_blank" rel="noopener"><app-icon name="whatsapp" [size]="16" /> WhatsApp</a>
@@ -119,7 +124,7 @@
         }
       </div>
 
-      <div>
+      <div class="pay">
         <h4>Pagamento</h4>
         <span><app-icon name="pix" [size]="16" /> Pix{{ s.pix_discount_percent ? ' com ' + s.pix_discount_percent + '% OFF' : '' }}</span>
         <span><app-icon name="card" [size]="16" /> Cartão{{ s.max_installments > 1 ? ' em até ' + s.max_installments + 'x' : '' }}</span>
@@ -131,8 +136,11 @@
   </div>
 
   <div class="container legal">
-    <span>© {{ year }} {{ store.settings()?.store_name || 'JC Moda Masculina' }}</span>
-    <span class="legal-links"><a routerLink="/privacidade">Política de privacidade</a> · <a routerLink="/admin">Área do lojista</a></span>
+    <span class="copy">© {{ year }} {{ store.settings()?.store_name || 'JC Moda Masculina' }}</span>
+    <nav class="legal-links" aria-label="Links institucionais">
+      <a routerLink="/privacidade">Política de privacidade</a>
+      <a routerLink="/admin" class="seller"><app-icon name="user" [size]="16" /> {{ auth.loggedIn() ? 'Abrir o painel da loja' : 'Área do lojista' }}</a>
+    </nav>
   </div>
 </footer>
 
