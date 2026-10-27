@@ -3,7 +3,12 @@
 }
 
 .crumbs {
-  margin-bottom: 12px;
+  margin-bottom: 4px;
+  // área de toque maior sem mudar o visual da trilha
+  a {
+    display: inline-block;
+    padding: 12px 0;
+  }
   a:hover {
     text-decoration: underline;
   }
@@ -43,6 +48,7 @@
 }
 
 .chip {
+  min-height: 44px;
   padding: 8px 16px;
   border: 1.5px solid var(--line);
   border-radius: 999px;

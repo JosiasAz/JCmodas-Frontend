@@ -51,7 +51,9 @@
                 </button>
               </div>
               <strong>{{ line.total | money }}</strong>
-              <button class="link small muted" (click)="cart.setQuantity(line.key, 0)">Remover</button>
+              <button class="remove" (click)="cart.setQuantity(line.key, 0)" aria-label="Remover do carrinho" title="Remover">
+                <app-icon name="trash" [size]="18" />
+              </button>
             </div>
           </article>
         }
@@ -63,7 +65,7 @@
         <h3>Resumo</h3>
 
         <form class="coupon" (ngSubmit)="applyCoupon()">
-          <input class="input" name="coupon" [(ngModel)]="couponInput" placeholder="Cupom de desconto" aria-label="Cupom" />
+          <input class="input" name="coupon" [(ngModel)]="couponInput" placeholder="Cupom" aria-label="Cupom de desconto" autocapitalize="characters" />
           <button class="btn outline" type="submit" [disabled]="!couponInput.trim()">Aplicar</button>
         </form>
         @if (q.coupon_message) {

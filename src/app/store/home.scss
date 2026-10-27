@@ -87,24 +87,33 @@
 
 .dots {
   position: absolute;
-  bottom: 18px;
+  bottom: 1px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 8px;
 
+  // o botão tem 44px de área de toque; a bolinha visível é desenhada no ::before
   button {
-    width: 10px;
-    height: 10px;
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    height: 44px;
     padding: 0;
-    border: 2px solid #fff;
-    border-radius: 999px;
-    background: transparent;
+    border: 0;
+    background: none;
     cursor: pointer;
-    transition: width 0.2s;
-    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15);
 
-    &.on {
+    &::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      box-sizing: border-box;
+      border: 2px solid #fff;
+      border-radius: 999px;
+      box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15);
+      transition: width 0.2s;
+    }
+    &.on::before {
       width: 28px;
       background: #fff;
     }
@@ -160,11 +169,13 @@
 
 .perks {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  // ajusta à quantidade de vantagens ligadas no painel (de 1 a 5)
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 12px;
   margin-top: 28px;
 
-  div {
+  div,
+  a {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -181,8 +192,11 @@
     font-size: 0.95rem;
   }
 
-  @media (max-width: 900px) {
-    grid-template-columns: repeat(2, 1fr);
+  @media (max-width: 520px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    > :last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
   }
 }
 
@@ -192,6 +206,24 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 16px;
+  // celular: uma faixa que rola para o lado, com círculos menores (antes cada círculo ocupava meia tela)
+  @media (max-width: 640px) {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    margin: 0 -16px;
+    padding: 0 16px 4px;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    .category {
+      flex: 0 0 92px;
+      scroll-snap-align: start;
+      font-size: 0.85rem;
+    }
+  }
 }
 
 .category {

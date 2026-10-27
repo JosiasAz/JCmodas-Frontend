@@ -61,7 +61,14 @@
       @if (s.pickup_enabled) {
         <div><app-icon name="store" [size]="26" /><span><strong>Retire grátis</strong> na loja</span></div>
       }
+      <!-- sempre aparece: a faixa nunca fica vazia e responde ao "e se não servir?" -->
+      <a routerLink="/trocas"><app-icon name="refresh" [size]="26" /><span><strong>Troca fácil</strong> em até {{ s.exchange_days }} dias</span></a>
     </section>
+  }
+
+  <!-- sem banner cadastrado a página ficava sem título principal (Google e leitores de tela) -->
+  @if (!heroes().length && !isEmpty()) {
+    <h1 class="sr-only">{{ store.settings()?.store_name || 'JC Moda Masculina' }}: roupas masculinas com entrega para todo o Brasil</h1>
   }
 
   <!-- categorias -->
@@ -180,7 +187,12 @@
   @if (d.best_sellers.length) {
     <section class="section container">
       <div class="section-head">
-        <div><h2>Mais vendidos</h2><p>Os favoritos dos nossos clientes.</p></div>
+        <!-- sem vendas ainda, "Mais vendidos" seria falso: vira a vitrine da coleção -->
+        @if (hasSales()) {
+          <div><h2>Mais vendidos</h2><p>Os favoritos dos nossos clientes.</p></div>
+        } @else {
+          <div><h2>Nossa coleção</h2><p>Confira as peças da loja.</p></div>
+        }
         <a routerLink="/loja" [queryParams]="{ ordem: 'best_sellers' }">Ver mais</a>
       </div>
       <div class="grid-products">
@@ -192,14 +204,14 @@
   }
 
   <!-- novidades -->
-  @if (d.new_arrivals.length) {
+  @if (newArrivals().length) {
     <section class="section container">
       <div class="section-head">
         <div><h2>Acabou de chegar</h2></div>
         <a routerLink="/loja" [queryParams]="{ ordem: 'newest' }">Ver novidades</a>
       </div>
       <div class="grid-products">
-        @for (p of d.new_arrivals.slice(0, 4); track p.id) {
+        @for (p of newArrivals(); track p.id) {
           <app-product-card [product]="p" />
         }
       </div>

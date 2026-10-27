@@ -1,5 +1,11 @@
 // Tipos espelhando os schemas da API (backend/app/schemas)
 
+/** Tabela de medidas da categoria: a 1ª coluna é o tamanho, as outras são medidas em cm. */
+export interface SizeGuide {
+  columns: string[];
+  rows: string[][];
+}
+
 export interface Category {
   id: number;
   name: string;
@@ -7,6 +13,7 @@ export interface Category {
   image: string | null;
   sort: number;
   active: boolean;
+  size_guide: SizeGuide | null;
   product_count: number;
 }
 
@@ -137,6 +144,11 @@ export interface AdminUser {
 
 export interface StoreSettings {
   store_name: string;
+  /** nome empresarial e CNPJ: o Decreto 7.962/2013 pede que apareçam no site */
+  legal_name: string;
+  cnpj: string;
+  /** prazo para troca de tamanho/modelo (o arrependimento de 7 dias é da lei) */
+  exchange_days: number;
   announcement: string;
   whatsapp: string;
   instagram: string;
@@ -153,6 +165,10 @@ export interface StoreSettings {
   max_qty_per_item: number;
   /** só vem nas configurações do painel (a vitrine usa /api/privacy) */
   privacy_policy?: string;
+  /** só vem nas configurações do painel (a vitrine usa /api/exchange) */
+  exchange_policy?: string;
+  /** só vem nas configurações do painel: código do cupom do pop-up de boas-vindas */
+  welcome_coupon?: string;
 }
 
 export interface HomeData {
@@ -170,6 +186,14 @@ export interface ProductDetail {
   product: Product;
   related: Product[];
   combos: Combo[];
+  size_guide: SizeGuide | null;
+}
+
+/** Oferta do pop-up de boas-vindas (null quando não há cupom escolhido ou ele venceu). */
+export interface WelcomeOffer {
+  code: string;
+  offer: string;
+  min_order: number;
 }
 
 // ------------------------------------------------------------ carrinho e pedidos
@@ -279,6 +303,9 @@ export interface OrderPage {
 
 export interface Dashboard {
   revenue: number;
+  /** vendas do ano (pagas em diante) e o teto anual do MEI */
+  year_revenue: number;
+  mei_limit: number;
   orders: number;
   average_ticket: number;
   new_orders: number;

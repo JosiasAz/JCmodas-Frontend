@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AdminApiService } from '../core/admin-api.service';
@@ -9,7 +9,7 @@ import { MoneyPipe } from '../shared/money.pipe';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, Icon, MoneyPipe, DatePipe],
+  imports: [RouterLink, Icon, MoneyPipe, DatePipe, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page-head">
@@ -38,6 +38,29 @@ import { MoneyPipe } from '../shared/money.pipe';
         <div class="card kpi"><span>Ticket médio</span><strong>{{ d.average_ticket | money }}</strong></div>
         <div class="card kpi"><span>Produtos ativos</span><strong>{{ d.products_active }}</strong></div>
       </div>
+
+      <!-- MEI: passar de R$ 81 mil no ano muda o regime de imposto -->
+      @if (d.mei_limit) {
+        <section class="card mei" [class.warn]="meiPercent() >= 80 && meiPercent() < 100" [class.over]="meiPercent() >= 100">
+          <div class="mei-head">
+            <h3>Limite do MEI em {{ year }}</h3>
+            <strong>{{ meiPercent() | number: '1.0-0' }}%</strong>
+          </div>
+          <div class="meter" role="meter" aria-valuemin="0" [attr.aria-valuemax]="d.mei_limit" [attr.aria-valuenow]="d.year_revenue"
+            [attr.aria-label]="'Vendido no ano: ' + (d.year_revenue | money) + ' de ' + (d.mei_limit | money)">
+            <span [style.width.%]="meiPercent() > 100 ? 100 : meiPercent()"></span>
+          </div>
+          <p class="small">
+            <b>{{ d.year_revenue | money }}</b> vendidos pelo site este ano, de <b>{{ d.mei_limit | money }}</b>.
+            @if (meiPercent() < 100) {
+              Ainda cabem {{ d.mei_limit - d.year_revenue | money }}.
+            } @else {
+              <b>Limite passado: fale com um contador ou com o Sebrae.</b>
+            }
+          </p>
+          <p class="muted small">Conta só pedidos pagos do site. Some também o que você vende fora dele (feiras, viagens, maquininha).</p>
+        </section>
+      }
 
       <section class="card chart-card">
         <h3>Faturamento por dia</h3>
@@ -117,6 +140,13 @@ import { MoneyPipe } from '../shared/money.pipe';
       @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); } }
     .kpi { display: flex; flex-direction: column; gap: 6px;
       span { color: var(--muted); font-size: .85rem; } strong { font-size: 1.6rem; font-weight: 700; } }
+    .mei { margin-bottom: 18px; --meter: var(--ok);
+      &.warn { --meter: var(--warn); } &.over { --meter: var(--sale); }
+      p { margin: 8px 0 0; } }
+    .mei-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+      h3 { margin: 0; font-family: var(--font); font-size: 1rem; } strong { color: var(--meter); font-size: 1.2rem; } }
+    .meter { height: 10px; margin-top: 12px; border-radius: 99px; background: var(--sand); overflow: hidden;
+      span { display: block; height: 100%; border-radius: 99px; background: var(--meter); transition: width .4s; } }
     .chart-card { margin-bottom: 18px; h3 { margin: 0; font-family: var(--font); font-size: 1rem; } }
     .no-sales { margin: 16px 0 0; padding: 40px 16px; text-align: center; color: var(--muted); background: var(--bg); border-radius: var(--radius-sm); }
     .chart { display: grid; grid-template-columns: auto 1fr; gap: 10px; height: 220px; margin-top: 16px; }
@@ -154,6 +184,11 @@ export class Dashboard {
   protected maxDay = computed(() => Math.max(0, ...(this.data()?.sales_by_day ?? []).map((d) => d.total)));
   protected statuses: OrderStatus[] = ['novo', 'pago', 'separando', 'enviado', 'entregue', 'cancelado'];
   protected statusLabel = STATUS_LABEL;
+  protected year = new Date().getFullYear();
+  protected meiPercent = computed(() => {
+    const d = this.data();
+    return d?.mei_limit ? (d.year_revenue / d.mei_limit) * 100 : 0;
+  });
 
   constructor() {
     effect((onCleanup) => {

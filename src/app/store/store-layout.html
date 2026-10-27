@@ -136,15 +136,25 @@
   </div>
 
   <div class="container legal">
-    <span class="copy">© {{ year }} {{ store.settings()?.store_name || 'JC Moda Masculina' }}</span>
+    <!-- nome empresarial e CNPJ: exigidos em loja virtual pelo Decreto 7.962/2013 -->
+    <span class="copy">
+      © {{ year }} {{ store.settings()?.legal_name || store.settings()?.store_name || 'JC Moda Masculina' }}
+      @if (store.settings()?.cnpj; as cnpj) {
+        · CNPJ {{ cnpj }}
+      }
+    </span>
     <nav class="legal-links" aria-label="Links institucionais">
+      <a routerLink="/trocas">Trocas e devoluções</a>
       <a routerLink="/privacidade">Política de privacidade</a>
-      <a routerLink="/admin" class="seller"><app-icon name="user" [size]="16" /> {{ auth.loggedIn() ? 'Abrir o painel da loja' : 'Área do lojista' }}</a>
+      <a routerLink="/admin" class="seller"><app-icon name="user" [size]="14" /> {{ auth.loggedIn() ? 'Painel da loja' : 'Área do lojista' }}</a>
     </nav>
   </div>
 </footer>
 
-@if (store.settings()?.whatsapp) {
+<app-store-nudges />
+
+<!-- no carrinho e no checkout o botão cobria campos e o resumo do pedido -->
+@if (store.settings()?.whatsapp && !hideWhatsappFloat()) {
   <a class="whatsapp-float" [href]="whatsappHelp()" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
     <app-icon name="whatsapp" [size]="28" />
   </a>

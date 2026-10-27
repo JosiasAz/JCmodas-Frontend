@@ -18,6 +18,7 @@ export const routes: Routes = [
       { path: 'carrinho', title: 'Carrinho | JC Moda', data: STORE, loadComponent: () => import('./store/cart').then((m) => m.Cart) },
       { path: 'checkout', title: 'Finalizar compra | JC Moda', data: STORE, loadComponent: () => import('./store/checkout').then((m) => m.Checkout) },
       { path: 'pedido/:code', title: 'Pedido recebido | JC Moda', data: STORE, loadComponent: () => import('./store/order-done').then((m) => m.OrderDone) },
+      { path: 'trocas', title: 'Trocas e devoluções | JC Moda', data: { ...STORE, kind: 'trocas' }, loadComponent: () => import('./store/privacy').then((m) => m.Privacy) },
       { path: 'privacidade', title: 'Política de privacidade | JC Moda', data: STORE, loadComponent: () => import('./store/privacy').then((m) => m.Privacy) },
       { path: 'rastrear', title: 'Acompanhar pedido | JC Moda', data: STORE, loadComponent: () => import('./store/track-order').then((m) => m.TrackOrder) },
     ],

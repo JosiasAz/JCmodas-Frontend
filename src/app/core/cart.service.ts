@@ -27,6 +27,8 @@ interface CartState {
 
 const STORAGE_KEY = 'jc-cart';
 const LAST_ORDER_KEY = 'jc-last-order';
+/** já comprou neste aparelho: o pop-up de cupom de primeira compra não aparece mais */
+export const ORDERED_KEY = 'jc-ordered';
 
 // mesmas chaves que a API devolve em QuoteLine.key
 export const itemKey = (i: { variant_id: number }) => `p:${i.variant_id}`;
@@ -119,6 +121,7 @@ export class CartService {
   saveLastOrder(order: Order) {
     try {
       sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify(order));
+      localStorage.setItem(ORDERED_KEY, '1');
     } catch {
       /* ignora */
     }

@@ -124,7 +124,11 @@
             <app-icon name="card" [size]="22" />
             <div>
               <strong>Cartão de crédito</strong>
-              <span class="muted">Em até {{ quote()?.max_installments ?? store.maxInstallments() }}x sem juros</span>
+              @if ((quote()?.max_installments ?? store.maxInstallments()) > 1) {
+                <span class="muted">Em até {{ quote()?.max_installments ?? store.maxInstallments() }}x sem juros</span>
+              } @else {
+                <span class="muted">À vista</span>
+              }
             </div>
           </label>
           <label class="choice">
@@ -191,7 +195,9 @@
         </label>
         <p class="muted small center">Ao confirmar, você recebe o código do pedido e as instruções de pagamento.
           Seus dados são usados só para entregar o pedido, conforme a
-          <a routerLink="/privacidade" target="_blank" class="policy">Política de Privacidade</a>.</p>
+          <a routerLink="/privacidade" target="_blank" class="policy">Política de Privacidade</a>.
+          Você pode desistir em até 7 dias depois de receber: veja as
+          <a routerLink="/trocas" target="_blank" class="policy">Trocas e devoluções</a>.</p>
       } @else {
         <div class="skeleton" style="height: 200px"></div>
       }

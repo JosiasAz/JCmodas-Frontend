@@ -3,7 +3,12 @@
 }
 
 .crumbs {
-  margin-bottom: 18px;
+  margin-bottom: 8px;
+  // área de toque maior sem mudar o visual da trilha
+  a {
+    display: inline-block;
+    padding: 12px 0;
+  }
   a:hover {
     text-decoration: underline;
   }
@@ -162,6 +167,84 @@
   font-size: 0.9rem;
 }
 
+.option-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  .option-label {
+    margin-bottom: 0;
+  }
+}
+
+.size-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+// ------------------------------------------------------------ tabela de medidas
+
+.guide {
+  padding: 8px 20px calc(20px + env(safe-area-inset-bottom));
+}
+
+.guide-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  h2 {
+    margin: 0;
+    font-size: 1.3rem;
+  }
+}
+
+.guide-table {
+  overflow-x: auto;
+  margin: 12px 0 16px;
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  th,
+  td {
+    padding: 12px 10px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  th {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  td:first-child {
+    font-weight: 700;
+  }
+  // o tamanho escolhido fica destacado
+  tr.on td {
+    background: var(--sand);
+  }
+}
+
+.tip {
+  margin: 0 0 16px;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
 .pills {
   display: flex;
   flex-wrap: wrap;
@@ -265,6 +348,14 @@
     align-items: center;
     gap: 10px;
   }
+}
+
+.perk-link {
+  display: inline-block;
+  padding: 10px 0;
+  margin: -10px 0;
+  text-decoration: underline;
+  font-weight: 600;
 }
 
 .description {

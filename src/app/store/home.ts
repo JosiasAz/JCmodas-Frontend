@@ -22,6 +22,14 @@ export class Home {
   protected slide = signal(0);
 
   protected heroes = computed(() => this.data()?.banners.hero ?? []);
+  protected hasSales = computed(() => (this.data()?.best_sellers ?? []).some((p) => p.sold_count > 0));
+  // com poucos produtos, "Acabou de chegar" repetia as mesmas peças de cima: mostra só as que ainda não apareceram
+  protected newArrivals = computed(() => {
+    const d = this.data();
+    if (!d) return [];
+    const shown = new Set([...d.best_sellers, ...d.on_sale.slice(0, 8)].map((p) => p.id));
+    return d.new_arrivals.filter((p) => !shown.has(p.id)).slice(0, 4);
+  });
   /** Loja recém-instalada: nada cadastrado ainda. */
   protected isEmpty = computed(() => {
     const d = this.data();

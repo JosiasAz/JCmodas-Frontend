@@ -9,18 +9,19 @@ Os dados são fornecidos pela API da loja, mantida em um repositório separado.
 **Loja**
 - Página inicial com banners, categorias, ofertas, combos e novidades
 - Catálogo com busca, filtros e ordenação
-- Página do produto com galeria, cores, tamanhos e disponibilidade em estoque
+- Página do produto com galeria, cores, tamanhos, disponibilidade em estoque e tabela de medidas ("Qual meu tamanho?")
 - Carrinho com cupom de desconto e cálculo de frete
 - Checkout com preenchimento de endereço pelo CEP e pagamento via Pix, cartão ou dinheiro
 - Envio do pedido pelo WhatsApp e acompanhamento pelo código do pedido
-- Página de política de privacidade
+- Páginas de política de privacidade e de trocas e devoluções
+- Avisos discretos: carrinho esquecido (ao voltar ao site) e cupom de boas-vindas (após 40 s ou na 2ª página, no máximo 1 vez por semana, nunca no carrinho/checkout)
 
 **Painel administrativo** (`/admin`)
-- Resumo de vendas e estoque
-- Gestão de pedidos, produtos, categorias, promoções, cupons, combos e anúncios
+- Resumo de vendas e estoque, com o quanto já foi vendido no ano frente ao teto do MEI
+- Gestão de pedidos, produtos, categorias (com tabela de medidas), promoções, cupons, combos e anúncios
 - Gestão de usuários com autenticação em duas etapas
 - Histórico de alterações
-- Configurações da loja (WhatsApp colado em qualquer formato, endereço pelo CEP, horário por dia da semana, frete, pagamento e privacidade)
+- Configurações da loja (WhatsApp colado em qualquer formato, endereço pelo CEP, horário por dia da semana, dados da empresa, cupom de boas-vindas, frete, pagamento, trocas e privacidade)
 
 ## Tecnologias
 

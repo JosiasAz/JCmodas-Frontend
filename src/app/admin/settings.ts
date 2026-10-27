@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { AdminApiService } from '../core/admin-api.service';
 import { errorMessage } from '../core/auth';
-import { StoreSettings } from '../core/models';
+import { Coupon, StoreSettings } from '../core/models';
 import { StoreService } from '../core/store.service';
 import { ToastService } from '../core/toast.service';
 import { Icon } from '../shared/icon';
@@ -13,6 +14,7 @@ import {
   WEEKDAYS,
   emptyAddress,
   formatAddress,
+  formatCnpj,
   formatHours,
   formatWhatsapp,
   isAddressComplete,
@@ -28,7 +30,7 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
 
 @Component({
   selector: 'app-settings',
-  imports: [FormsModule, Icon],
+  imports: [FormsModule, RouterLink, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page-head">
@@ -152,12 +154,42 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
         </section>
 
         <section class="card">
-          <h3><app-icon name="megaphone" [size]="18" /> Aviso no topo do site</h3>
+          <h3><app-icon name="megaphone" [size]="18" /> Avisos para o cliente</h3>
           <label class="field">
-            <span>Texto do aviso <em class="opt">(opcional)</em></span>
+            <span>Aviso no topo do site <em class="opt">(opcional)</em></span>
             <input class="input" name="announcement" [(ngModel)]="f.announcement" maxlength="160"
               placeholder="Frete grátis acima de R$ 299 · 5% OFF no Pix" />
             <small>Aparece numa faixa no topo de todas as páginas. Deixe vazio para esconder.</small>
+          </label>
+          <label class="field">
+            <span>Cupom de boas-vindas <em class="opt">(opcional)</em></span>
+            <select class="input" name="welcome_coupon" [(ngModel)]="f.welcome_coupon">
+              <option value="">Sem pop-up de boas-vindas</option>
+              @for (c of coupons(); track c.id) {
+                <option [value]="c.code">{{ c.code }}{{ c.description ? ' · ' + c.description : '' }}{{ c.active ? '' : ' (desativado)' }}</option>
+              }
+            </select>
+            <small>
+              Quem visita pela primeira vez vê um aviso discreto com esse cupom depois de 40 segundos ou na 2ª página.
+              Aparece no máximo 1 vez por semana, nunca no carrinho ou no checkout, e some para quem já comprou.
+              @if (!coupons().length) { Crie o cupom antes em <a routerLink="/admin/cupons">Cupons</a>. }
+            </small>
+          </label>
+        </section>
+
+        <section class="card">
+          <h3><app-icon name="store" [size]="18" /> Dados da empresa</h3>
+          <p class="muted small">A lei de comércio eletrônico pede que o nome da empresa e o CNPJ apareçam no site.
+            Eles vão no rodapé e nas políticas.</p>
+          <label class="field">
+            <span>Nome empresarial</span>
+            <input class="input" name="legal_name" [(ngModel)]="f.legal_name" maxlength="120" placeholder="Como está no cartão CNPJ" />
+            <small>No MEI costuma ser o seu nome completo seguido do CPF ou de "ME".</small>
+          </label>
+          <label class="field">
+            <span>CNPJ</span>
+            <input class="input" name="cnpj" [(ngModel)]="f.cnpj" (blur)="f.cnpj = tidyCnpj(f.cnpj)" placeholder="00.000.000/0001-00"
+              autocapitalize="characters" />
           </label>
         </section>
 
@@ -181,9 +213,9 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
             <small>Mostrada ao cliente depois que ele finaliza o pedido.</small></label>
         </section>
 
-        <section class="card wide">
+        <section class="card">
           <h3><app-icon name="box" [size]="18" /> Pedidos e estoque</h3>
-          <div class="row">
+          <div class="row" style="--cols: 1">
             <label class="field"><span>Cancelar pedido não pago depois de (horas)</span>
               <input class="input" type="number" min="0" max="720" name="hold" [(ngModel)]="f.order_hold_hours" />
               <small>O estoque reservado volta para a loja. 0 = nunca cancelar sozinho.</small></label>
@@ -191,6 +223,40 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
               <input class="input" type="number" min="1" max="50" name="maxqty" [(ngModel)]="f.max_qty_per_item" />
               <small>Evita que uma pessoa reserve todo o estoque de uma peça.</small></label>
           </div>
+        </section>
+
+        <section class="card wide">
+          <h3><app-icon name="refresh" [size]="18" /> Trocas e devoluções</h3>
+          <div class="auto">
+            <app-icon name="check" [size]="20" />
+            <div>
+              <b>A página de trocas é montada sozinha.</b>
+              <p>Ela explica ao cliente, em linguagem simples, o que a lei garante e como a loja troca. Aparece no
+                rodapé, na página de cada produto e no checkout. <a href="/trocas" target="_blank">Ver a página</a></p>
+              <ul>
+                <li><b>Desistência em 7 dias</b> depois de receber (obrigatório por lei): a loja paga o frete de volta e devolve todo o valor.</li>
+                <li><b>Defeito em até 90 dias</b> (obrigatório por lei): a loja paga o frete de ida e volta.</li>
+                <li><b>Troca de tamanho ou modelo</b> no prazo que você escolher abaixo: o cliente envia, a loja manda a peça nova.</li>
+              </ul>
+            </div>
+          </div>
+          <label class="field days-field">
+            <span>Prazo para troca de tamanho ou modelo (dias)</span>
+            <input class="input" type="number" min="7" max="365" name="exchange_days" [(ngModel)]="f.exchange_days" inputmode="numeric" />
+            <small>Mínimo de 7 dias. 30 dias é o mais comum e passa confiança para quem compra roupa sem provar.</small>
+          </label>
+          <details class="custom" [open]="!!f.exchange_policy?.trim()">
+            <summary>Quero escrever minha própria política de trocas (opcional)</summary>
+            <p class="muted small">Enquanto ficar vazio, vale a página automática. Use "## " para títulos e "- " para listas.
+              Os direitos de 7 dias e de 90 dias são da lei e não podem ser retirados.</p>
+            <textarea class="input policy" name="exchange" [(ngModel)]="f.exchange_policy" placeholder="(usando a página automática)"></textarea>
+            <div class="policy-actions">
+              <button class="btn sm outline" type="button" (click)="useTemplate(f, 'exchange')">Começar a partir da automática</button>
+              @if (f.exchange_policy?.trim()) {
+                <button class="btn sm ghost" type="button" (click)="f.exchange_policy = ''">Voltar a usar a automática</button>
+              }
+            </div>
+          </details>
         </section>
 
         <section class="card wide">
@@ -214,7 +280,7 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
             <p class="muted small">Enquanto ficar vazio, vale a política automática. Use "## " para títulos e "- " para listas.</p>
             <textarea class="input policy" name="privacy" [(ngModel)]="f.privacy_policy" placeholder="(usando a política automática)"></textarea>
             <div class="policy-actions">
-              <button class="btn sm outline" type="button" (click)="useTemplate(f)">Começar a partir da automática</button>
+              <button class="btn sm outline" type="button" (click)="useTemplate(f, 'privacy')">Começar a partir da automática</button>
               @if (f.privacy_policy?.trim()) {
                 <button class="btn sm ghost" type="button" (click)="f.privacy_policy = ''">Voltar a usar a automática</button>
               }
@@ -262,7 +328,7 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
     .closed .day-name { color: var(--muted); font-weight: 500; }
     /* os campos de hora dividem o espaço que sobra em vez de ter largura fixa */
     .times { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; max-width: 260px; }
-    .input.time { flex: 1; min-width: 0; width: auto; min-height: 40px; padding: 6px 8px; text-align: center;
+    .input.time { flex: 1; min-width: 0; width: auto; min-height: 44px; padding: 6px 8px; text-align: center;
       font-variant-numeric: tabular-nums;
       /* no celular o toque no campo já abre o relógio; o ícone só roubava espaço da hora */
       @media (max-width: 640px) { &::-webkit-calendar-picker-indicator { display: none; } } }
@@ -278,10 +344,13 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
     .auto { display: flex; gap: 12px; padding: 14px 16px; background: var(--ok-soft); border-radius: var(--radius-sm); line-height: 1.5;
       > app-icon { color: var(--ok); flex-shrink: 0; margin-top: 2px; }
       p { margin: 4px 0 6px; } ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; } a { text-decoration: underline; } }
+    .days-field { max-width: 360px; margin-top: 16px; }
     .custom { margin-top: 16px;
       summary { cursor: pointer; font-weight: 600; font-size: .92rem; padding: 6px 0; }
       .muted { margin: 6px 0 10px; } }
-    .policy { min-height: 260px; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
+    /* 16px no celular: abaixo disso o iPhone dá zoom ao tocar no campo */
+    .policy { min-height: 260px; font-family: ui-monospace, Consolas, monospace; font-size: .85rem;
+      @media (max-width: 640px) { font-size: 1rem; } }
     .policy-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 
     .actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 14px; flex-wrap: wrap;
@@ -298,6 +367,7 @@ export class Settings {
   protected readonly retentionMonths = RETENTION_MONTHS;
 
   protected form = signal<StoreSettings | null>(null);
+  protected coupons = signal<Coupon[]>([]);
   protected saving = signal(false);
   protected error = signal('');
 
@@ -311,6 +381,7 @@ export class Settings {
 
   constructor() {
     this.api.settings().subscribe((s) => this.load(s));
+    this.api.list<Coupon>('coupons').subscribe((list) => this.coupons.set(list));
   }
 
   private load(s: StoreSettings) {
@@ -413,11 +484,16 @@ export class Settings {
   // ---------------------------------------------------------------- privacidade
 
   /** Copia a política automática (já com os dados da loja) para o lojista editar. */
-  useTemplate(f: StoreSettings) {
-    if (f.privacy_policy?.trim() && !confirm('Substituir o texto atual pela política automática?')) return;
+  useTemplate(f: StoreSettings, kind: 'privacy' | 'exchange') {
+    const field = kind === 'privacy' ? 'privacy_policy' : 'exchange_policy';
+    if (f[field]?.trim() && !confirm('Substituir o texto atual pela política automática?')) return;
     this.http
-      .get<{ text: string }>('/api/privacy', { params: { template: 'true' } })
-      .subscribe((p) => this.form.set({ ...f, privacy_policy: p.text }));
+      .get<{ text: string }>(`/api/${kind}`, { params: { template: 'true' } })
+      .subscribe((p) => this.form.set({ ...f, [field]: p.text }));
+  }
+
+  tidyCnpj(text: string) {
+    return formatCnpj(text);
   }
 
   // ---------------------------------------------------------------- salvar

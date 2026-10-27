@@ -16,11 +16,12 @@ import { AuthService } from '../core/auth';
 import { CartService } from '../core/cart.service';
 import { StoreService } from '../core/store.service';
 import { Icon } from '../shared/icon';
+import { StoreNudges } from './store-nudges';
 import { MoneyPipe } from '../shared/money.pipe';
 
 @Component({
   selector: 'app-store-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, FormsModule, Icon, MoneyPipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, FormsModule, Icon, MoneyPipe, StoreNudges],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './store-layout.html',
   styleUrl: './store-layout.scss',
@@ -34,6 +35,7 @@ export class StoreLayout {
   protected search = '';
   protected searchOpen = signal(false);
   protected menuOpen = signal(false);
+  protected hideWhatsappFloat = signal(false);
   protected auth = inject(AuthService);
   protected year = new Date().getFullYear();
   private searchInput = viewChild<ElementRef<HTMLInputElement>>('searchInput');
@@ -54,7 +56,10 @@ export class StoreLayout {
     // fecha menu e busca ao trocar de página
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd), takeUntilDestroyed(inject(DestroyRef)))
-      .subscribe(() => this.closeAll());
+      .subscribe((e) => {
+        this.closeAll();
+        this.hideWhatsappFloat.set(/^\/(carrinho|checkout|pedido)(\/|\?|$)/.test((e as NavigationEnd).urlAfterRedirects));
+      });
   }
 
   toggleSearch() {

@@ -38,6 +38,7 @@ export class ProductPage {
   protected variant = signal<Variant | null>(null);
   protected quantity = signal(1);
   protected sizeError = signal(false);
+  protected guideOpen = signal(false);
 
   protected product = computed(() => this.detail()?.product);
   protected colors = computed(() => [
@@ -60,6 +61,9 @@ export class ProductPage {
   protected maxQty = computed(() => this.variant()?.stock ?? 1);
   protected lowStock = LOW_STOCK;
 
+  protected sizeHelpLink = computed(() =>
+    this.store.whatsappLink(`Olá! Estou em dúvida sobre o tamanho do produto "${this.product()?.name}". Pode me ajudar?`),
+  );
   protected whatsappLink = computed(() => {
     const p = this.product();
     if (!p) return '';

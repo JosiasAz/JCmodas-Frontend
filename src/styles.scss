@@ -40,7 +40,7 @@ html {
 body {
   margin: 0;
   font-family: var(--font);
-  font-size: 15px;
+  font-size: 16px; // leitura confortável no celular (Apple/Google recomendam 16px no corpo do texto)
   line-height: 1.5;
   color: var(--ink);
   background: var(--bg);
@@ -167,8 +167,8 @@ button {
 .icon-btn {
   display: inline-grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 44px; // tamanho mínimo de toque
+  height: 44px;
   border: 0;
   border-radius: 50%;
   background: transparent;
@@ -301,7 +301,9 @@ textarea.input { min-height: 96px; resize: vertical; }
   margin-bottom: 22px;
   h2 { margin: 0; }
   p { margin: 4px 0 0; color: var(--muted); }
-  a { font-weight: 600; white-space: nowrap; text-decoration: underline; text-underline-offset: 4px; }
+  // padding + margem negativa: área de toque de 44px sem mudar o desenho
+  a { font-weight: 600; white-space: nowrap; text-decoration: underline; text-underline-offset: 4px;
+    display: inline-block; padding: 10px 0; margin: -10px 0; }
 }
 
 .grid-products {

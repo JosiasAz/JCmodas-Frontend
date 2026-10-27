@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { ApiService } from '../core/api.service';
 
 /** Bloco do texto da política: "## título", "- item" ou parágrafo. */
@@ -12,7 +12,7 @@ interface Block {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <article class="container page">
-      <h1>Política de privacidade</h1>
+      <h1>{{ kind() === 'trocas' ? 'Trocas e devoluções' : 'Política de privacidade' }}</h1>
       @if (blocks(); as list) {
         @for (b of list; track $index) {
           @switch (b.kind) {
@@ -43,7 +43,11 @@ interface Block {
     ul { padding-left: 20px; }
   `,
 })
+/** Página de política (privacidade ou trocas): o texto vem da API, escrito no painel ou o modelo automático. */
 export class Privacy {
+  /** vem do `data` da rota */
+  readonly kind = input<'privacidade' | 'trocas'>('privacidade');
+  private api = inject(ApiService);
   private text = signal<string | null>(null);
 
   // texto simples escrito no painel: "## " vira subtítulo, "- " vira lista (sem HTML, nada é interpretado)
@@ -71,8 +75,10 @@ export class Privacy {
   });
 
   constructor() {
-    inject(ApiService)
-      .privacy()
-      .subscribe((p) => this.text.set(p.text));
+    effect(() => {
+      const request = this.kind() === 'trocas' ? this.api.exchange() : this.api.privacy();
+      this.text.set(null);
+      request.subscribe((p) => this.text.set(p.text));
+    });
   }
 }

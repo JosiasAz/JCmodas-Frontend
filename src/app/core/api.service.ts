@@ -11,6 +11,7 @@ import {
   ProductPage,
   Quote,
   QuoteRequest,
+  WelcomeOffer,
   StoreSettings,
   Category,
 } from './models';
@@ -125,5 +126,13 @@ export class ApiService {
 
   privacy() {
     return this.http.get<{ text: string; is_template: boolean }>('/api/privacy');
+  }
+
+  welcome() {
+    return this.http.get<WelcomeOffer | null>('/api/welcome');
+  }
+
+  exchange() {
+    return this.http.get<{ text: string; is_template: boolean }>('/api/exchange');
   }
 }

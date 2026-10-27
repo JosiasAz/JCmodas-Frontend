@@ -34,6 +34,13 @@ export function normalizeInstagram(text: string): string {
     .replace(/^@+/, '');
 }
 
+/** "11222333000181" -> "11.222.333/0001-81" (aceita o CNPJ com letras; a API confere os dígitos). */
+export function formatCnpj(text: string): string {
+  const raw = text.replace(/[^0-9a-z]/gi, '').toUpperCase();
+  if (raw.length !== 14) return text.trim();
+  return `${raw.slice(0, 2)}.${raw.slice(2, 5)}.${raw.slice(5, 8)}/${raw.slice(8, 12)}-${raw.slice(12)}`;
+}
+
 // ------------------------------------------------------------------ horário
 
 export const WEEKDAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];

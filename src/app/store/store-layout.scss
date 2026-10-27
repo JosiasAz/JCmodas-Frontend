@@ -382,7 +382,7 @@ main {
       // área de toque confortável para o dedo
       a,
       span {
-        min-height: 40px;
+        min-height: 44px;
       }
     }
   }
@@ -425,16 +425,11 @@ main {
     flex-wrap: wrap;
   }
 
+  // acesso do lojista: discreto, para não competir com os links do cliente
   .seller {
-    min-height: 40px;
-    padding: 0 16px;
-    border: 1px solid #4a4a4a;
-    border-radius: 999px;
-    color: #fff;
-    font-weight: 600;
-    &:hover {
-      border-color: #fff;
-    }
+    min-height: 44px;
+    color: #9b978f;
+    font-size: 0.82rem;
   }
 
   // celular: tudo centralizado e em linhas separadas; espaço no fim para o botão do WhatsApp não cobrir nada
@@ -454,9 +449,6 @@ main {
         justify-content: center;
         min-height: 44px;
       }
-    }
-    .seller {
-      font-size: 0.92rem;
     }
     .copy {
       justify-content: center;
