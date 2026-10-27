@@ -44,6 +44,7 @@ export const routes: Routes = [
       { path: 'atividades', title: 'Atividades | Painel JC', data: ADMIN, loadComponent: () => import('./admin/audit').then((m) => m.Audit) },
       { path: 'usuarios', title: 'Equipe | Painel JC', data: ADMIN, loadComponent: () => import('./admin/users').then((m) => m.Users) },
       { path: 'conta', title: 'Minha conta | Painel JC', data: ADMIN, loadComponent: () => import('./admin/account').then((m) => m.Account) },
+      { path: 'ajuda', title: 'Ajuda | Painel JC', data: ADMIN, loadComponent: () => import('./admin/help').then((m) => m.Help) },
       { path: 'configuracoes', title: 'Configurações | Painel JC', data: ADMIN, loadComponent: () => import('./admin/settings').then((m) => m.Settings) },
     ],
   },

@@ -40,6 +40,7 @@ const MORE: { title: string; items: MenuItem[] }[] = [
       { label: 'Equipe', link: '/admin/usuarios', icon: 'user' },
       { label: 'Configurações', link: '/admin/configuracoes', icon: 'settings' },
       { label: 'Atividades', link: '/admin/atividades', icon: 'clock' },
+      { label: 'Ajuda', link: '/admin/ajuda', icon: 'help' },
     ],
   },
 ];
