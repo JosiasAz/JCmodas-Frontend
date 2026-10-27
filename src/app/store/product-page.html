@@ -51,11 +51,19 @@
     <div class="main">
       <!-- galeria -->
       <div class="gallery">
-        <div class="thumbs" #thumbs>
-          @for (img of p.images; track img; let i = $index) {
-            <button [class.on]="i === image()" (click)="pickImage(i)" [attr.aria-label]="'Foto ' + (i + 1)">
-              <img [src]="img | img" alt="" />
-            </button>
+        <div class="thumbs-wrap">
+          <div class="thumbs" #thumbs [class.fade-a]="canPrev()" [class.fade-b]="canNext()" (scroll)="updateThumbNav()">
+            @for (img of p.images; track img; let i = $index) {
+              <button [class.on]="i === image()" (click)="pickImage(i)" [attr.aria-label]="'Foto ' + (i + 1)">
+                <img [src]="img | img" alt="" />
+              </button>
+            }
+          </div>
+          @if (canPrev()) {
+            <button type="button" class="thumb-nav prev" (click)="scrollThumbs(-1)" aria-label="Fotos anteriores"><app-icon name="down" [size]="16" /></button>
+          }
+          @if (canNext()) {
+            <button type="button" class="thumb-nav next" (click)="scrollThumbs(1)" aria-label="Mais fotos"><app-icon name="down" [size]="16" /></button>
           }
         </div>
         <div class="photo">

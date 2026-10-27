@@ -1,4 +1,4 @@
-import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, signal, viewChild } from '@angular/core';
+import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, effect, ElementRef, HostListener, inject, input, signal, viewChild } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
@@ -31,6 +31,9 @@ export class ProductPage {
 
   readonly slug = input.required<string>();
   private thumbs = viewChild<ElementRef<HTMLElement>>('thumbs');
+  /** há miniaturas escondidas antes/depois (mostra as setas e o esmaecido) */
+  protected canPrev = signal(false);
+  protected canNext = signal(false);
 
   protected detail = signal<ProductDetail | null>(null);
   protected notFound = signal(false);
@@ -90,6 +93,7 @@ export class ProductPage {
       if (left < box.scrollLeft || left + on.offsetWidth > box.scrollLeft + box.clientWidth) {
         box.scrollTo({ left: left - (box.clientWidth - on.offsetWidth) / 2, behavior: 'smooth' });
       }
+      this.updateThumbNav();
     });
     effect((onCleanup) => {
       const slug = this.slug();
@@ -117,6 +121,24 @@ export class ProductPage {
       });
       onCleanup(() => request.unsubscribe());
     });
+  }
+
+  @HostListener('window:resize')
+  updateThumbNav() {
+    const box = this.thumbs()?.nativeElement;
+    if (!box) return;
+    // computador: coluna (rola para baixo); celular: fila (rola para o lado)
+    const vertical = getComputedStyle(box).flexDirection === 'column';
+    const [pos, size, total] = vertical
+      ? [box.scrollTop, box.clientHeight, box.scrollHeight]
+      : [box.scrollLeft, box.clientWidth, box.scrollWidth];
+    this.canPrev.set(pos > 2);
+    this.canNext.set(pos + size < total - 2);
+  }
+
+  scrollThumbs(direction: 1 | -1) {
+    const box = this.thumbs()!.nativeElement;
+    box.scrollBy({ top: direction * box.clientHeight * 0.8, left: direction * box.clientWidth * 0.8 });
   }
 
   pickColor(color: string) {
