@@ -99,6 +99,9 @@ const NEXT: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>>
           }
 
           <div class="modal-foot">
+            @if (o.status === 'cancelado') {
+              <button class="btn ghost" (click)="remove(o)"><app-icon name="trash" [size]="16" /> Remover do histórico</button>
+            }
             @if (o.status !== 'cancelado' && o.status !== 'entregue') {
               <button class="btn ghost" (click)="setStatus(o, 'cancelado')">Cancelar pedido</button>
             }
@@ -206,6 +209,25 @@ export class Orders {
         this.toast.show(`Pedido ${updated.code}: ${STATUS_LABEL[updated.status]}`);
         this.selected.set(updated);
         this.page.update((p) => p && { ...p, items: p.items.map((x) => (x.id === updated.id ? updated : x)) });
+      },
+      error: (err) => this.toast.error(errorMessage(err)),
+    });
+  }
+
+  async remove(o: Order) {
+    const ok = await this.confirm.ask({
+      title: `Remover o pedido ${o.code}?`,
+      message: 'O pedido cancelado some da lista de pedidos. Não dá para desfazer.',
+      confirmLabel: 'Remover',
+      cancelLabel: 'Voltar',
+      danger: true,
+    });
+    if (!ok) return;
+    this.api.deleteOrder(o.id).subscribe({
+      next: () => {
+        this.toast.show(`Pedido ${o.code} removido do histórico`);
+        this.selected.set(null);
+        this.page.update((p) => p && { ...p, items: p.items.filter((x) => x.id !== o.id), total: p.total - 1 });
       },
       error: (err) => this.toast.error(errorMessage(err)),
     });

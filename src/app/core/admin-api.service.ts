@@ -72,6 +72,10 @@ export class AdminApiService {
     return this.http.patch<Order>(`${this.base}/orders/${id}/status`, { status });
   }
 
+  deleteOrder(id: number) {
+    return this.http.delete<void>(`${this.base}/orders/${id}`);
+  }
+
   changeMyPassword(current_password: string, new_password: string) {
     return this.http.post<{ access_token: string; name: string }>(`${this.base}/me/password`, {
       current_password,
