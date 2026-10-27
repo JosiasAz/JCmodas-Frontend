@@ -16,9 +16,16 @@ import { MoneyPipe } from '../shared/money.pipe';
         <div class="discount"><dt>{{ d.label }}</dt><dd>- {{ d.amount | money }}</dd></div>
       }
       <div>
-        <dt>Frete</dt>
+        <dt>
+          Frete
+          @if (q.shipping_note && !q.shipping_pending) {
+            <small>{{ q.shipping_note }}</small>
+          }
+        </dt>
         <dd>
-          @if (q.shipping) {
+          @if (q.shipping_pending) {
+            <span class="pending">a calcular</span>
+          } @else if (q.shipping) {
             {{ q.shipping | money }}
           } @else {
             <span class="free">Grátis</span>
@@ -34,8 +41,11 @@ import { MoneyPipe } from '../shared/money.pipe';
   styles: `
     .totals { margin: 0; display: flex; flex-direction: column; gap: 10px; }
     .totals div { display: flex; justify-content: space-between; gap: 12px; }
-    dt { color: var(--muted); } dd { margin: 0; font-weight: 500; }
+    dt { color: var(--muted); display: flex; flex-direction: column; gap: 2px;
+      small { font-weight: 500; font-size: .75rem; color: var(--muted); } }
+    dd { margin: 0; font-weight: 500; }
     .discount dt, .discount dd, .free { color: var(--ok); font-weight: 600; }
+    .pending { color: var(--muted); font-weight: 600; }
     .total { padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line); }
     .total dt { color: var(--ink); font-weight: 600; }
     .total dd { font-size: 1.35rem; font-weight: 700; }

@@ -97,12 +97,18 @@
       </label>
       <div class="row">
         <label class="field">
-          <span>Preço de venda (R$)</span>
-          <input class="input" type="number" inputmode="decimal" step="0.01" min="0" name="price" [(ngModel)]="d.price" required />
+          <span>Preço de venda</span>
+          <div class="affix">
+            <span class="unit pre">R$</span>
+            <input class="input pad-pre" type="number" inputmode="decimal" step="0.01" min="0" name="price" [(ngModel)]="d.price" required />
+          </div>
         </label>
         <label class="field">
-          <span>Preço "de" (R$) <small>opcional</small></span>
-          <input class="input" type="number" inputmode="decimal" step="0.01" min="0" name="compare" [(ngModel)]="d.compare_at_price" />
+          <span>Preço "de" <small>opcional</small></span>
+          <div class="affix">
+            <span class="unit pre">R$</span>
+            <input class="input pad-pre" type="number" inputmode="decimal" step="0.01" min="0" name="compare" [(ngModel)]="d.compare_at_price" />
+          </div>
           <small>Aparece riscado ao lado do preço.</small>
         </label>
       </div>

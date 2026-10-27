@@ -156,6 +156,8 @@ export interface StoreSettings {
   address: string;
   opening_hours: string;
   shipping_fee: number;
+  shipping_state_fee: number;
+  shipping_other_fee: number;
   free_shipping_min: number;
   pix_discount_percent: number;
   pix_key: string;
@@ -208,6 +210,9 @@ export interface QuoteRequest {
   coupon_code?: string | null;
   delivery_method?: DeliveryMethod;
   payment_method?: PaymentMethod;
+  cep?: string;
+  city?: string;
+  state?: string;
 }
 
 export interface QuoteLine {
@@ -229,6 +234,8 @@ export interface Quote {
   discounts: { label: string; amount: number }[];
   discount_total: number;
   shipping: number;
+  shipping_pending: boolean;
+  shipping_note: string | null;
   total: number;
   coupon_code: string | null;
   coupon_message: string | null;

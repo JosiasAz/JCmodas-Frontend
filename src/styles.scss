@@ -265,6 +265,31 @@ textarea.input { min-height: 96px; resize: vertical; }
   input { width: 18px; height: 18px; accent-color: var(--ink); }
 }
 
+/* R$, %, horas… grudados no campo, para o lojista não adivinhar a unidade */
+.affix {
+  position: relative;
+  display: flex;
+  align-items: center;
+  .unit {
+    position: absolute;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.88rem;
+    pointer-events: none;
+    &.pre { left: 14px; }
+    &.post { right: 14px; }
+  }
+  .input.pad-pre { padding-left: 42px; }
+  .input.pad-post { padding-right: 64px; }
+}
+
+input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button { appearance: none; margin: 0; }
+}
+
 /* cartões de escolha (entrega, pagamento) */
 .choice {
   display: flex;

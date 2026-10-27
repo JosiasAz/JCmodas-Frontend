@@ -113,6 +113,33 @@ main {
   }
 }
 
+.seller-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  margin-right: 4px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+    background: var(--bg);
+  }
+  &.on {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+  }
+}
+
 .cart-btn {
   display: inline-flex;
   align-items: center;
@@ -222,15 +249,17 @@ main {
     flex: 1;
   }
 
-  // acesso do lojista: no pé do menu, separado das opções de compra
+  // acesso do lojista: no pé do menu, destacado das opções de compra
   .drawer-seller {
     display: flex;
     align-items: center;
     gap: 12px;
-    min-height: 60px;
-    padding: 10px 12px;
-    border: 1.5px solid var(--line);
-    border-radius: 12px;
+    min-height: 64px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--ink);
+    border-radius: 14px;
+    background: var(--ink);
+    color: #fff;
     -webkit-tap-highlight-color: transparent;
     > span {
       flex: 1;
@@ -239,11 +268,16 @@ main {
       line-height: 1.3;
     }
     small {
-      color: var(--muted);
+      color: #c9c6c0;
       font-size: 0.78rem;
     }
     &:active {
-      background: var(--bg);
+      background: var(--ink-2);
+    }
+    &.on {
+      background: var(--ok);
+      border-color: var(--ok);
+      small { color: #d9f0e2; }
     }
   }
   nav a {
@@ -425,15 +459,39 @@ main {
     flex-wrap: wrap;
   }
 
-  // acesso do lojista: discreto, para não competir com os links do cliente
-  .seller {
-    min-height: 44px;
-    color: #9b978f;
-    font-size: 0.82rem;
+  .seller-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 24px;
+    padding-top: 22px;
+    padding-bottom: 10px;
+    border-top: 1px solid #2c2c2c;
+    strong {
+      display: block;
+      color: #fff;
+      font-size: 1rem;
+    }
+    p {
+      margin: 4px 0 0;
+      color: #c9c6c0;
+      font-size: 0.88rem;
+    }
+    .btn {
+      flex-shrink: 0;
+      &:hover { color: var(--ink); }
+    }
   }
 
   // celular: tudo centralizado e em linhas separadas; espaço no fim para o botão do WhatsApp não cobrir nada
   @media (max-width: 720px) {
+    .seller-strip {
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+      padding: 24px 0 8px;
+      .btn { width: 100%; }
+    }
     .legal {
       flex-direction: column-reverse;
       align-items: stretch;

@@ -77,8 +77,23 @@
           </p>
         }
 
+        <label class="field cep">
+          <span>Calcular frete</span>
+          <input class="input" name="shippingCep" [ngModel]="dest.cep()" (ngModelChange)="onCep($event)"
+            inputmode="numeric" maxlength="9" autocomplete="postal-code" placeholder="00000-000" aria-label="CEP para calcular o frete" />
+          @if (cepStatus() === 'loading') {
+            <small>Buscando...</small>
+          } @else if (cepStatus() === 'error') {
+            <small class="warn">CEP não encontrado. Você pode informar de novo no checkout.</small>
+          } @else if (dest.city()) {
+            <small class="ok">{{ dest.city() }}/{{ dest.state() }} — o cliente paga a entrega</small>
+          } @else {
+            <small>Digite o CEP. O valor entra no total do pedido.</small>
+          }
+        </label>
+
         <app-cart-totals [quote]="q" [pixHint]="true" />
-        <p class="muted small note">Frete calculado para entrega.{{ store.settings()?.pickup_enabled ? ' Retirada na loja é grátis.' : '' }}</p>
+        <p class="muted small note">{{ store.settings()?.pickup_enabled ? 'Retirada na loja é grátis.' : 'O frete é calculado pelo CEP e pago na finalização.' }}</p>
 
         <a class="btn lg block" routerLink="/checkout" [class.disabled]="!q.can_checkout"
           [attr.aria-disabled]="!q.can_checkout" (click)="!q.can_checkout && $event.preventDefault()">

@@ -25,6 +25,7 @@ import {
   parseAddress,
   parseHours,
 } from './settings-format';
+import { formatPixKey } from '../shared/br-format';
 
 const HOURS_MAX = 120; // tamanho da coluna no banco
 const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (services/privacy.py)
@@ -189,40 +190,107 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
           </label>
           <label class="field">
             <span>CNPJ</span>
-            <input class="input" name="cnpj" [(ngModel)]="f.cnpj" (blur)="f.cnpj = tidyCnpj(f.cnpj)" placeholder="00.000.000/0001-00"
-              autocapitalize="characters" />
+            <input class="input mono" name="cnpj" [ngModel]="f.cnpj" (ngModelChange)="onCnpj(f, $event)"
+              placeholder="00.000.000/0001-00" maxlength="18" autocapitalize="characters" autocomplete="off" />
+            <small>Aparece no rodapé e nas políticas, já com pontos e barra.</small>
           </label>
         </section>
 
         <section class="card">
           <h3><app-icon name="truck" [size]="18" /> Entrega</h3>
-          <div class="row">
-            <label class="field"><span>Taxa de entrega (R$)</span><input class="input" type="number" step="0.01" min="0" name="fee" [(ngModel)]="f.shipping_fee" /></label>
-            <label class="field"><span>Frete grátis acima de (R$)</span><input class="input" type="number" step="0.01" min="0" name="free" [(ngModel)]="f.free_shipping_min" />
-              <small>0 = sem frete grátis</small></label>
+          <div class="auto">
+            <app-icon name="check" [size]="20" />
+            <div>
+              <b>O cliente paga o frete. O valor sai sozinho pelo CEP dele.</b>
+              <p>Na hora da compra a loja compara o destino com o endereço dela e aplica a faixa certa.
+                Você não precisa calcular nada pedido a pedido.</p>
+            </div>
           </div>
-          <label class="check"><input type="checkbox" name="pickup" [(ngModel)]="f.pickup_enabled" /> Permitir retirada na loja</label>
+          @if (originLabel(); as origin) {
+            <p class="city small"><app-icon name="pin" [size]="14" /> Sai de {{ origin }}</p>
+          } @else {
+            <p class="note small">Preencha o CEP da loja no endereço acima para o sistema saber de onde o pedido sai.</p>
+          }
+          <div class="rates">
+            <label class="field">
+              <span>Na cidade da loja</span>
+              <div class="affix">
+                <span class="unit pre">R$</span>
+                <input class="input pad-pre" type="number" inputmode="decimal" step="0.01" min="0" name="fee" [(ngModel)]="f.shipping_fee" />
+              </div>
+            </label>
+            <label class="field">
+              <span>No mesmo estado</span>
+              <div class="affix">
+                <span class="unit pre">R$</span>
+                <input class="input pad-pre" type="number" inputmode="decimal" step="0.01" min="0" name="stateFee" [(ngModel)]="f.shipping_state_fee" />
+              </div>
+            </label>
+            <label class="field">
+              <span>Outros estados</span>
+              <div class="affix">
+                <span class="unit pre">R$</span>
+                <input class="input pad-pre" type="number" inputmode="decimal" step="0.01" min="0" name="otherFee" [(ngModel)]="f.shipping_other_fee" />
+              </div>
+            </label>
+          </div>
+          <p class="muted small">Esses valores entram no total do pedido. 0 = grátis nessa faixa.</p>
+          <label class="field">
+            <span>Frete grátis em compras acima de</span>
+            <div class="affix">
+              <span class="unit pre">R$</span>
+              <input class="input pad-pre" type="number" inputmode="decimal" step="0.01" min="0" name="free" [(ngModel)]="f.free_shipping_min" />
+            </div>
+            <small>0 = sem frete grátis. Abaixo desse valor o cliente continua pagando a entrega.</small>
+          </label>
+          <label class="check"><input type="checkbox" name="pickup" [(ngModel)]="f.pickup_enabled" /> Permitir retirada na loja (grátis)</label>
         </section>
 
         <section class="card">
           <h3><app-icon name="pix" [size]="18" /> Pagamento</h3>
           <div class="row">
-            <label class="field"><span>Desconto no Pix (%)</span><input class="input" type="number" step="0.5" min="0" max="99" name="pix_pct" [(ngModel)]="f.pix_discount_percent" /></label>
-            <label class="field"><span>Parcelas sem juros</span><input class="input" type="number" min="1" max="12" name="inst" [(ngModel)]="f.max_installments" /></label>
+            <label class="field">
+              <span>Desconto no Pix</span>
+              <div class="affix">
+                <input class="input pad-post" type="number" inputmode="decimal" step="0.5" min="0" max="99" name="pix_pct" [(ngModel)]="f.pix_discount_percent" />
+                <span class="unit post">%</span>
+              </div>
+            </label>
+            <label class="field">
+              <span>Parcelas sem juros</span>
+              <div class="affix">
+                <input class="input pad-post" type="number" inputmode="numeric" min="1" max="12" name="inst" [(ngModel)]="f.max_installments" />
+                <span class="unit post">vezes</span>
+              </div>
+            </label>
           </div>
-          <label class="field"><span>Chave Pix</span><input class="input" name="pix_key" [(ngModel)]="f.pix_key" />
-            <small>Mostrada ao cliente depois que ele finaliza o pedido.</small></label>
+          <label class="field">
+            <span>Chave Pix</span>
+            <input class="input" name="pix_key" [(ngModel)]="f.pix_key" (blur)="f.pix_key = tidyPix(f.pix_key)"
+              placeholder="CPF, CNPJ, e-mail, celular ou chave aleatória" autocomplete="off" />
+            <small>Mostrada ao cliente depois que ele finaliza o pedido. Pode colar do app do banco — a gente formata.</small>
+          </label>
         </section>
 
         <section class="card">
           <h3><app-icon name="box" [size]="18" /> Pedidos e estoque</h3>
-          <div class="row" style="--cols: 1">
-            <label class="field"><span>Cancelar pedido não pago depois de (horas)</span>
-              <input class="input" type="number" min="0" max="720" name="hold" [(ngModel)]="f.order_hold_hours" />
-              <small>O estoque reservado volta para a loja. 0 = nunca cancelar sozinho.</small></label>
-            <label class="field"><span>Máximo de unidades por item no pedido</span>
-              <input class="input" type="number" min="1" max="50" name="maxqty" [(ngModel)]="f.max_qty_per_item" />
-              <small>Evita que uma pessoa reserve todo o estoque de uma peça.</small></label>
+          <div class="row">
+            <label class="field">
+              <span>Cancelar pedido não pago depois de</span>
+              <div class="affix">
+                <input class="input pad-post" type="number" inputmode="numeric" min="0" max="720" name="hold" [(ngModel)]="f.order_hold_hours" />
+                <span class="unit post">horas</span>
+              </div>
+              <small>O estoque reservado volta para a loja. 0 = nunca cancelar sozinho.</small>
+            </label>
+            <label class="field">
+              <span>Máximo de unidades por item</span>
+              <div class="affix">
+                <input class="input pad-post" type="number" inputmode="numeric" min="1" max="50" name="maxqty" [(ngModel)]="f.max_qty_per_item" />
+                <span class="unit post">un.</span>
+              </div>
+              <small>Evita que uma pessoa reserve todo o estoque de uma peça.</small>
+            </label>
           </div>
         </section>
 
@@ -313,6 +381,9 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
     .prefix { position: relative;
       > span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
       .input { padding-left: 32px; } }
+    .mono { font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+    .rates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 14px 0 8px;
+      @media (max-width: 720px) { grid-template-columns: 1fr; } }
 
     .cep-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
       .field { flex: 0 1 180px; } .cep-status { padding-top: 8px; } a { text-decoration: underline; } }
@@ -387,12 +458,23 @@ export class Settings {
   }
 
   private load(s: StoreSettings) {
+    s.cnpj = formatCnpj(s.cnpj);
+    s.pix_key = formatPixKey(s.pix_key);
+    if (!s.shipping_state_fee && !s.shipping_other_fee && s.shipping_fee > 0) {
+      s.shipping_state_fee = Math.round((s.shipping_fee + 10) * 100) / 100;
+      s.shipping_other_fee = Math.round(Math.max(s.shipping_fee + 22, 29.9) * 100) / 100;
+    }
     this.form.set(s);
     this.whatsappText.set(formatWhatsapp(s.whatsapp));
     this.week.set(parseHours(s.opening_hours));
     const parsed = parseAddress(s.address);
     this.addr.set(parsed ?? emptyAddress());
     this.legacyAddress.set(parsed ? null : s.address.trim() || null);
+  }
+
+  protected originLabel() {
+    const a = this.addr();
+    return a.city && a.state ? `${a.city}/${a.state}` : null;
   }
 
   // ---------------------------------------------------------------- contato
@@ -501,8 +583,12 @@ export class Settings {
       .subscribe((p) => this.form.set({ ...f, [field]: p.text }));
   }
 
-  tidyCnpj(text: string) {
-    return formatCnpj(text);
+  onCnpj(f: StoreSettings, text: string) {
+    f.cnpj = formatCnpj(text);
+  }
+
+  tidyPix(text: string) {
+    return formatPixKey(text);
   }
 
   // ---------------------------------------------------------------- salvar
@@ -524,6 +610,8 @@ export class Settings {
     f.whatsapp = whatsapp;
     f.instagram = normalizeInstagram(f.instagram);
     f.opening_hours = hours;
+    f.cnpj = formatCnpj(f.cnpj);
+    f.pix_key = formatPixKey(f.pix_key);
     return null;
   }
 

@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
 import { errorMessage } from '../core/auth';
 import { Order } from '../core/models';
+import { formatPhoneBR } from '../shared/br-format';
 import { Icon } from '../shared/icon';
 import { OrderView } from './order-view';
 
@@ -24,7 +25,8 @@ import { OrderView } from './order-view';
         </label>
         <label class="field">
           <span>Telefone</span>
-          <input class="input" name="phone" [(ngModel)]="phone" placeholder="(00) 00000-0000" inputmode="tel" required />
+          <input class="input" name="phone" [ngModel]="phone" (ngModelChange)="phone = formatPhone($event)"
+            placeholder="(00) 00000-0000" inputmode="tel" autocomplete="tel" required />
         </label>
         <button class="btn lg" type="submit" [disabled]="loading()"><app-icon name="search" [size]="18" /> Buscar</button>
       </form>
@@ -59,6 +61,10 @@ export class TrackOrder {
 
   ngOnInit() {
     this.code = this.codigo() ?? '';
+  }
+
+  formatPhone(text: string) {
+    return formatPhoneBR(text);
   }
 
   search() {

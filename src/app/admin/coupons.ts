@@ -71,15 +71,26 @@ import { Pager } from './pager';
             </label>
             @if (d.kind !== 'free_shipping') {
               <label class="field">
-                <span>{{ d.kind === 'percent' ? 'Desconto (%)' : 'Desconto (R$)' }}</span>
-                <input class="input" type="number" step="0.01" min="0" name="value" [(ngModel)]="d.value" />
+                <span>{{ d.kind === 'percent' ? 'Desconto' : 'Desconto' }}</span>
+                <div class="affix">
+                  @if (d.kind === 'percent') {
+                    <input class="input pad-post" type="number" inputmode="decimal" step="0.01" min="0" name="value" [(ngModel)]="d.value" />
+                    <span class="unit post">%</span>
+                  } @else {
+                    <span class="unit pre">R$</span>
+                    <input class="input pad-pre" type="number" inputmode="decimal" step="0.01" min="0" name="value" [(ngModel)]="d.value" />
+                  }
+                </div>
               </label>
             }
           </div>
           <div class="row">
             <label class="field">
-              <span>Pedido mínimo (R$)</span>
-              <input class="input" type="number" step="0.01" min="0" name="min" [(ngModel)]="d.min_order" />
+              <span>Pedido mínimo</span>
+              <div class="affix">
+                <span class="unit pre">R$</span>
+                <input class="input pad-pre" type="number" inputmode="decimal" step="0.01" min="0" name="min" [(ngModel)]="d.min_order" />
+              </div>
             </label>
             <label class="field">
               <span>Limite de usos</span>

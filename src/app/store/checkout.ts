@@ -6,7 +6,9 @@ import { ApiService } from '../core/api.service';
 import { errorMessage } from '../core/auth';
 import { CartService } from '../core/cart.service';
 import { DeliveryMethod, PaymentMethod, Quote } from '../core/models';
+import { ShippingDest } from '../core/shipping-dest';
 import { StoreService } from '../core/store.service';
+import { formatCep, formatPhoneBR } from '../shared/br-format';
 import { Icon } from '../shared/icon';
 import { MoneyPipe } from '../shared/money.pipe';
 import { CartTotals } from './cart-totals';
@@ -27,6 +29,7 @@ export class Checkout {
   private router = inject(Router);
   protected cart = inject(CartService);
   protected store = inject(StoreService);
+  protected dest = inject(ShippingDest);
 
   protected delivery = signal<DeliveryMethod>('entrega');
   protected payment = signal<PaymentMethod>('pix');
@@ -57,11 +60,24 @@ export class Checkout {
 
   constructor() {
     if (this.cart.isEmpty()) this.router.navigate(['/carrinho']);
+    if (!this.form.cep && this.dest.cep()) {
+      this.form.cep = this.dest.cep();
+      this.form.city ||= this.dest.city();
+      this.form.state ||= this.dest.state();
+    }
+    if (this.form.phone) this.form.phone = formatPhoneBR(this.form.phone);
+    if (this.form.cep) this.form.cep = formatCep(this.form.cep);
 
     effect((onCleanup) => {
       if (this.cart.isEmpty()) return;
+      const dest = this.dest.quoteFields();
       const sub = this.api
-        .quote({ ...this.cart.request(), delivery_method: this.delivery(), payment_method: this.payment() })
+        .quote({
+          ...this.cart.request(),
+          delivery_method: this.delivery(),
+          payment_method: this.payment(),
+          ...dest,
+        })
         .subscribe((q) => {
           this.quote.set(q);
           this.form.installments = Math.min(this.form.installments, q.max_installments);
@@ -75,19 +91,26 @@ export class Checkout {
   }
 
   formatPhone() {
-    const d = this.form.phone.replace(/\D/g, '').slice(0, 11);
-    this.form.phone =
-      d.length > 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
-      : d.length > 6 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
-      : d.length > 2 ? `(${d.slice(0, 2)}) ${d.slice(2)}`
-      : d;
+    this.form.phone = formatPhoneBR(this.form.phone);
+  }
+
+  onCep(text: string) {
+    this.form.cep = formatCep(text);
+    this.dest.set(this.form.cep);
+    this.cepStatus.set('');
+    if (this.form.cep.replace(/\D/g, '').length === 8) this.lookupCep();
+  }
+
+  onPlace() {
+    this.form.state = (this.form.state || '').toUpperCase();
+    this.dest.set(this.form.cep, this.form.city, this.form.state);
   }
 
   /** Preenche o endereço pelo CEP (ViaCEP). */
   lookupCep() {
     const cep = this.form.cep.replace(/\D/g, '');
     if (cep.length !== 8) return;
-    this.form.cep = `${cep.slice(0, 5)}-${cep.slice(5)}`;
+    this.form.cep = formatCep(cep);
     this.cepStatus.set('loading');
     this.http.get<any>(`https://viacep.com.br/ws/${cep}/json/`).subscribe({
       next: (r) => {
@@ -99,6 +122,7 @@ export class Checkout {
         this.form.district = r.bairro || this.form.district;
         this.form.city = r.localidade || this.form.city;
         this.form.state = r.uf || this.form.state;
+        this.dest.set(this.form.cep, this.form.city, this.form.state);
         this.cepStatus.set('');
       },
       error: () => this.cepStatus.set('error'),

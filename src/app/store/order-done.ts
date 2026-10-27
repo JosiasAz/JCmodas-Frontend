@@ -4,6 +4,7 @@ import { CartService } from '../core/cart.service';
 import { Order, PAYMENT_LABEL } from '../core/models';
 import { StoreService } from '../core/store.service';
 import { ToastService } from '../core/toast.service';
+import { formatPixKey } from '../shared/br-format';
 import { Icon } from '../shared/icon';
 import { MoneyPipe } from '../shared/money.pipe';
 import { OrderView } from './order-view';
@@ -32,7 +33,7 @@ import { OrderView } from './order-view';
               }
               @if (store.settings()?.pix_key; as key) {
                 <div class="pix-key">
-                  <code>{{ key }}</code>
+                  <code>{{ pixKey(key) }}</code>
                   <button class="btn sm outline" (click)="copy(key)"><app-icon name="copy" [size]="15" /> Copiar</button>
                 </div>
               }
@@ -104,6 +105,10 @@ export class OrderDone {
     ];
     return this.store.whatsappLink(lines.join('\n'));
   });
+
+  pixKey(text: string) {
+    return formatPixKey(text);
+  }
 
   copy(text: string) {
     navigator.clipboard?.writeText(text).then(() => this.toast.show('Chave Pix copiada!'));

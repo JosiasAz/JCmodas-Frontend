@@ -28,8 +28,12 @@
       }
     </nav>
 
-    <!-- direita: busca + carrinho -->
+    <!-- direita: painel + busca + carrinho -->
     <div class="tools">
+      <a routerLink="/admin" class="seller-btn desktop-only" [class.on]="auth.loggedIn()">
+        <app-icon name="store" [size]="18" />
+        <span>{{ auth.loggedIn() ? 'Painel' : 'Sou lojista' }}</span>
+      </a>
       <button class="icon-btn" (click)="toggleSearch()" [class.on]="searchOpen()" [attr.aria-expanded]="searchOpen()" aria-label="Buscar">
         <app-icon [name]="searchOpen() ? 'x' : 'search'" [size]="21" />
       </button>
@@ -79,9 +83,9 @@
       <app-icon name="whatsapp" [size]="18" /> Falar no WhatsApp
     </a>
   }
-  <a routerLink="/admin" class="drawer-seller" [attr.tabindex]="menuOpen() ? 0 : -1">
-    <app-icon name="user" [size]="18" />
-    <span><b>{{ auth.loggedIn() ? 'Abrir o painel da loja' : 'Área do lojista' }}</b><small>Entrar para gerenciar produtos e pedidos</small></span>
+  <a routerLink="/admin" class="drawer-seller" [class.on]="auth.loggedIn()" [attr.tabindex]="menuOpen() ? 0 : -1">
+    <app-icon name="store" [size]="18" />
+    <span><b>{{ sellerLabel() }}</b><small>{{ auth.loggedIn() ? 'Produtos, pedidos e configurações' : 'Entrar para gerenciar a loja' }}</small></span>
     <app-icon name="right" [size]="18" />
   </a>
 </aside>
@@ -135,18 +139,27 @@
     }
   </div>
 
+  <div class="container seller-strip">
+    <div>
+      <strong>{{ auth.loggedIn() ? 'Você está logado na loja' : 'Você vende nesta loja?' }}</strong>
+      <p>{{ auth.loggedIn() ? 'Abra o painel para gerenciar produtos, pedidos e configurações.' : 'O painel fica um clique à frente: produtos, pedidos e configurações.' }}</p>
+    </div>
+    <a routerLink="/admin" class="btn light">
+      <app-icon name="store" [size]="16" /> {{ sellerLabel() }}
+    </a>
+  </div>
+
   <div class="container legal">
     <!-- nome empresarial e CNPJ: exigidos em loja virtual pelo Decreto 7.962/2013 -->
     <span class="copy">
       © {{ year }} {{ store.settings()?.legal_name || store.settings()?.store_name || 'JC Moda Masculina' }}
-      @if (store.settings()?.cnpj; as cnpj) {
+      @if (cnpjText(); as cnpj) {
         · CNPJ {{ cnpj }}
       }
     </span>
     <nav class="legal-links" aria-label="Links institucionais">
       <a routerLink="/trocas">Trocas e devoluções</a>
       <a routerLink="/privacidade">Política de privacidade</a>
-      <a routerLink="/admin" class="seller"><app-icon name="user" [size]="14" /> {{ auth.loggedIn() ? 'Painel da loja' : 'Área do lojista' }}</a>
     </nav>
   </div>
 </footer>

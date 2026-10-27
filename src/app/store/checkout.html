@@ -37,12 +37,9 @@
             <div>
               <strong>Receber em casa</strong>
               <span class="muted">
+                Frete pelo CEP · você paga a entrega
                 @if (store.settings()?.free_shipping_min) {
-                  Grátis acima de {{ store.settings()!.free_shipping_min | money }}
-                } @else if (store.settings()?.shipping_fee) {
-                  Taxa de {{ store.settings()?.shipping_fee | money }}
-                } @else {
-                  Entrega grátis
+                  · grátis acima de {{ store.settings()!.free_shipping_min | money }}
                 }
               </span>
             </div>
@@ -64,12 +61,16 @@
             <div class="row" style="--cols: 3">
               <label class="field">
                 <span>CEP</span>
-                <input class="input" name="cep" [(ngModel)]="form.cep" (blur)="lookupCep()" (keyup)="form.cep.replace('-', '').length === 8 && lookupCep()"
-                  required inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" />
+                <input class="input" name="cep" [ngModel]="form.cep" (ngModelChange)="onCep($event)"
+                  required inputmode="numeric" maxlength="9" autocomplete="postal-code" placeholder="00000-000" />
                 @if (cepStatus() === 'loading') {
-                  <small>Buscando endereço...</small>
+                  <small>Buscando endereço e frete...</small>
                 } @else if (cepStatus() === 'error') {
-                  <small class="err">CEP não encontrado. Preencha manualmente.</small>
+                  <small class="err">CEP não encontrado. Preencha o endereço manualmente.</small>
+                } @else if (quote()?.shipping_pending) {
+                  <small>O frete aparece no resumo assim que o CEP estiver completo.</small>
+                } @else if (quote(); as q) {
+                  <small class="ship-ok">{{ q.shipping ? (q.shipping | money) + ' · ' + (q.shipping_note || 'entrega') : 'Frete grátis' }} — você paga na finalização</small>
                 }
               </label>
             </div>
@@ -96,11 +97,11 @@
             <div class="row" style="--cols: 3">
               <label class="field span-2">
                 <span>Cidade</span>
-                <input class="input" name="city" [(ngModel)]="form.city" required autocomplete="address-level2" />
+                <input class="input" name="city" [(ngModel)]="form.city" (ngModelChange)="onPlace()" required autocomplete="address-level2" />
               </label>
               <label class="field">
                 <span>UF</span>
-                <input class="input" name="state" [(ngModel)]="form.state" required maxlength="2" style="text-transform: uppercase" />
+                <input class="input" name="state" [(ngModel)]="form.state" (ngModelChange)="onPlace()" required maxlength="2" style="text-transform: uppercase" autocomplete="address-level1" />
               </label>
             </div>
           </div>

@@ -173,6 +173,11 @@
   }
 }
 
+.cep {
+  margin: 16px 0 4px;
+  .ok { color: var(--ok); }
+}
+
 .coupon {
   display: flex;
   gap: 8px;

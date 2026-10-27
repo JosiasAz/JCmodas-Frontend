@@ -15,6 +15,7 @@ import { filter } from 'rxjs';
 import { AuthService } from '../core/auth';
 import { CartService } from '../core/cart.service';
 import { StoreService } from '../core/store.service';
+import { formatCnpj } from '../shared/br-format';
 import { Icon } from '../shared/icon';
 import { StoreNudges } from './store-nudges';
 import { MoneyPipe } from '../shared/money.pipe';
@@ -51,6 +52,9 @@ export class StoreLayout {
   protected whatsappHelp = computed(() =>
     this.store.whatsappLink('Olá! Vim pelo site da JC Moda e gostaria de ajuda.'),
   );
+
+  protected cnpjText = computed(() => formatCnpj(this.store.settings()?.cnpj || ''));
+  protected sellerLabel = computed(() => (this.auth.loggedIn() ? 'Painel da loja' : 'Área do lojista'));
 
   constructor() {
     // fecha menu e busca ao trocar de página
