@@ -42,10 +42,11 @@
     .thumbs {
       order: 2;
       flex-direction: row;
+      contain: none;
+      overflow-y: visible;
       overflow-x: auto;
       scrollbar-width: none;
       button {
-        flex: none;
         width: 64px;
       }
     }
@@ -56,8 +57,16 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  // a coluna não mede nada sozinha: fica da altura da foto principal e rola por dentro
+  // (sem isso, cada foto nova esticava a galeria até o rodapé)
+  contain: size;
+  position: relative;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 
   button {
+    flex: none;
     width: 76px;
     aspect-ratio: 4 / 5;
     padding: 0;

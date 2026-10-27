@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
+import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
@@ -30,6 +30,7 @@ export class ProductPage {
   protected store = inject(StoreService);
 
   readonly slug = input.required<string>();
+  private thumbs = viewChild<ElementRef<HTMLElement>>('thumbs');
 
   protected detail = signal<ProductDetail | null>(null);
   protected notFound = signal(false);
@@ -77,6 +78,19 @@ export class ProductPage {
   });
 
   constructor() {
+    // a miniatura escolhida (ex.: pela cor) rola para dentro da coluna; só a coluna rola, a página fica parada
+    afterRenderEffect(() => {
+      const box = this.thumbs()?.nativeElement;
+      const on = box?.children[this.image()] as HTMLElement | undefined;
+      if (!box || !on) return;
+      const top = on.offsetTop, left = on.offsetLeft; // .thumbs é position: relative
+      if (top < box.scrollTop || top + on.offsetHeight > box.scrollTop + box.clientHeight) {
+        box.scrollTo({ top: top - (box.clientHeight - on.offsetHeight) / 2, behavior: 'smooth' });
+      }
+      if (left < box.scrollLeft || left + on.offsetWidth > box.scrollLeft + box.clientWidth) {
+        box.scrollTo({ left: left - (box.clientWidth - on.offsetWidth) / 2, behavior: 'smooth' });
+      }
+    });
     effect((onCleanup) => {
       const slug = this.slug();
       this.detail.set(null);

@@ -51,7 +51,7 @@
     <div class="main">
       <!-- galeria -->
       <div class="gallery">
-        <div class="thumbs">
+        <div class="thumbs" #thumbs>
           @for (img of p.images; track img; let i = $index) {
             <button [class.on]="i === image()" (click)="pickImage(i)" [attr.aria-label]="'Foto ' + (i + 1)">
               <img [src]="img | img" alt="" />
