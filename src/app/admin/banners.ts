@@ -123,7 +123,7 @@ const PALETTES = [
 
           <div class="field">
             <span>Imagem</span>
-            <app-image-input [(value)]="d.image" />
+            <app-image-input [(value)]="d.image" [aspect]="4 / 5" />
           </div>
 
           <div class="row" style="--cols: 3">

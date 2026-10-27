@@ -71,7 +71,7 @@ import { ImgPipe } from '../shared/img.pipe';
           </label>
           <div class="field">
             <span>Imagem do combo</span>
-            <app-image-input [(value)]="d.image" />
+            <app-image-input [(value)]="d.image" [aspect]="16 / 11" />
           </div>
 
           <h3 class="form-section">Peças do combo</h3>

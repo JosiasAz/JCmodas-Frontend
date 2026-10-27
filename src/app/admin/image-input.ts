@@ -5,18 +5,27 @@ import { errorMessage } from '../core/auth';
 import { ToastService } from '../core/toast.service';
 import { Icon } from '../shared/icon';
 import { ImgPipe } from '../shared/img.pipe';
+import { ImageCropper } from './image-cropper';
 
-/** Envio de imagem do computador/celular (inclusive direto da câmera) ou URL colada. */
+/**
+ * Envio de imagem do computador/celular (inclusive direto da câmera) ou URL colada.
+ * Com [aspect], a foto passa pelo recorte antes de subir, já no formato em que aparece na loja.
+ */
 @Component({
   selector: 'app-image-input',
-  imports: [FormsModule, Icon, ImgPipe],
+  imports: [FormsModule, Icon, ImgPipe, ImageCropper],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="image-input">
       @if (value() && !multiple()) {
-        <div class="preview">
-          <img [src]="value() | img" alt="" />
-          <button type="button" class="icon-btn" (click)="value.set(null)" aria-label="Remover imagem"><app-icon name="x" [size]="16" /></button>
+        <div class="preview-wrap">
+          <div class="preview" [class.round]="round()" [style.aspect-ratio]="aspect() ?? '84 / 100'">
+            <img [src]="value() | img" alt="" />
+            <button type="button" class="icon-btn" (click)="value.set(null)" aria-label="Remover imagem"><app-icon name="x" [size]="16" /></button>
+          </div>
+          @if (aspect()) {
+            <button type="button" class="btn sm ghost" (click)="adjust()"><app-icon name="edit" [size]="14" /> Ajustar</button>
+          }
         </div>
       }
       <div class="actions">
@@ -37,10 +46,16 @@ import { ImgPipe } from '../shared/img.pipe';
         }
       </div>
     </div>
+    @if (cropping(); as source) {
+      <app-image-cropper [source]="source" [aspect]="aspect()!" [round]="round()"
+        (done)="cropping.set(null); send($event)" (cancel)="cropping.set(null)" />
+    }
   `,
   styles: `
     .image-input { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .preview { position: relative; width: 84px; height: 100px; border-radius: 8px; overflow: hidden; background: var(--sand);
+    .preview-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .preview { position: relative; width: 84px; max-height: 100px; border-radius: 8px; overflow: hidden; background: var(--sand);
+      &.round { border-radius: 50%; button { top: 50%; right: 50%; transform: translate(50%, -50%); opacity: 0; } &:hover button { opacity: 1; } }
       img { width: 100%; height: 100%; object-fit: cover; }
       button { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; background: #fff; } }
     .actions { flex: 1; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; min-width: 220px;
@@ -59,27 +74,50 @@ export class ImageInput {
   readonly value = model<string | null>(null);
   readonly multiple = input(false);
   readonly label = input('Enviar imagem');
+  /** largura / altura da imagem na loja; sem ele, envia a foto como veio */
+  readonly aspect = input<number | null>(null);
+  /** moldura redonda (categorias) */
+  readonly round = input(false);
   /** No modo múltiplo, cada imagem enviada sai por aqui. */
   readonly uploaded = output<string>();
   /** Quantas imagens ainda estão subindo. */
   protected pending = signal(0);
+  /** foto aberta no recorte */
+  protected cropping = signal<Blob | null>(null);
 
   upload(event: Event) {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);
     (event.target as HTMLInputElement).value = '';
-    for (const file of files) {
-      this.pending.update((n) => n + 1);
-      this.api.upload(file).subscribe({
-        next: ({ url }) => {
-          this.pending.update((n) => n - 1);
-          if (this.multiple()) this.uploaded.emit(url);
-          else this.value.set(url);
-        },
-        error: (err) => {
-          this.pending.update((n) => n - 1);
-          this.toast.error(errorMessage(err));
-        },
-      });
+    if (this.aspect() && !this.multiple() && files[0]) {
+      this.cropping.set(files[0]);
+      return;
     }
+    files.forEach((file) => this.send(file));
+  }
+
+  /** reabre a imagem atual no recorte */
+  async adjust() {
+    try {
+      const res = await fetch(new ImgPipe().transform(this.value()));
+      if (!res.ok) throw new Error();
+      this.cropping.set(await res.blob());
+    } catch {
+      this.toast.error('Não deu para abrir esta imagem. Envie a foto de novo para ajustar.');
+    }
+  }
+
+  send(file: File) {
+    this.pending.update((n) => n + 1);
+    this.api.upload(file).subscribe({
+      next: ({ url }) => {
+        this.pending.update((n) => n - 1);
+        if (this.multiple()) this.uploaded.emit(url);
+        else this.value.set(url);
+      },
+      error: (err) => {
+        this.pending.update((n) => n - 1);
+        this.toast.error(errorMessage(err));
+      },
+    });
   }
 }

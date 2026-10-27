@@ -71,7 +71,7 @@ import { ImgPipe } from '../shared/img.pipe';
           </label>
           <div class="field">
             <span>Imagem</span>
-            <app-image-input [(value)]="d.image" />
+            <app-image-input [(value)]="d.image" [aspect]="1" [round]="true" />
           </div>
           <!-- aparece no produto em "Qual meu tamanho?" -->
           <div class="field guide">
