@@ -38,7 +38,10 @@ const GRIDS = [
     .head-actions { display: flex; gap: 8px; flex-wrap: wrap; label { cursor: pointer; } }
     .fab { display: none; }
     .grid-buttons { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
-    .grid-color { max-width: 160px; min-height: 36px; }
+    .grid-color { max-width: 240px; min-height: 36px; }
+    .photo-item { display: flex; flex-direction: column; }
+    .img-color { width: 84px; min-height: 30px; padding: 2px 4px; font-size: .75rem; margin-top: 4px; }
+    .color-hint { font-size: .82rem; color: var(--muted); margin: 0 0 10px; }
     .variants-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
     .variants { width: 100%; border-collapse: collapse; margin-bottom: 8px;
       th { text-align: left; font-size: .75rem; color: var(--muted); padding: 4px 6px; }
@@ -58,6 +61,7 @@ const GRIDS = [
       .images { display: grid; grid-template-columns: repeat(3, 1fr); }
       .img { width: auto; height: auto; aspect-ratio: 4 / 5;
         button { padding: 6px 8px; font-size: .78rem; } }
+      .photo-item .img-color { width: 100%; }
       .grid-buttons { .grid-color { max-width: none; flex-basis: 100%; } .btn { flex: 1; } }
       .variants .icon-btn { width: 36px; }
       .flags { flex-direction: column; gap: 12px; }
@@ -108,11 +112,32 @@ export class Products extends CrudPage<Product> {
       compare_at_price: null,
       category_id: this.categoryFilter(),
       images: [] as string[],
+      image_colors: {} as Record<string, string>,
       featured: false,
       is_new: true,
       active: true,
       variants: [] as Variant[],
     };
+  }
+
+  protected override toForm(item: Product) {
+    return { ...structuredClone(item), image_colors: { ...item.image_colors } };
+  }
+
+  /** cores já cadastradas nos tamanhos, na ordem em que aparecem */
+  colorsOf(form: any): string[] {
+    return [...new Set<string>(form.variants.map((v: Variant) => v.color?.trim()).filter(Boolean))];
+  }
+
+  setImageColor(form: any, img: string, color: string) {
+    if (color) form.image_colors[img] = color;
+    else delete form.image_colors[img];
+  }
+
+  /** cores que ainda não têm foto marcada (para lembrar o lojista) */
+  missingPhotoColors(form: any): string[] {
+    const linked = new Set(Object.values(form.image_colors ?? {}));
+    return form.images.length ? this.colorsOf(form).filter((c) => !linked.has(c)) : [];
   }
 
   protected override toPayload(form: any) {
@@ -127,16 +152,23 @@ export class Products extends CrudPage<Product> {
     return form.variants.reduce((n: number, v: Variant) => n + (Number(v.stock) || 0), 0);
   }
 
+  /** "Azul, Preta" vira duas cores; vazio = sem cor */
+  private gridColors(): (string | null)[] {
+    const colors = this.gridColor.split(/[,;]/).map((c) => c.trim()).filter(Boolean);
+    return colors.length ? colors : [null];
+  }
+
   addGrid(form: any, sizes: string[]) {
-    const color = this.gridColor.trim() || null;
-    for (const size of sizes) {
-      const exists = form.variants.some((v: Variant) => v.size === size && (v.color || null) === color);
-      if (!exists) form.variants.push({ size, color, stock: 0 });
+    for (const color of this.gridColors()) {
+      for (const size of sizes) {
+        const exists = form.variants.some((v: Variant) => v.size === size && (v.color || null) === color);
+        if (!exists) form.variants.push({ size, color, stock: 0 });
+      }
     }
   }
 
   addVariant(form: any) {
-    form.variants.push({ size: '', color: this.gridColor.trim() || null, stock: 0 });
+    form.variants.push({ size: '', color: this.gridColors()[0], stock: 0 });
   }
 
   makeCover(form: any, index: number) {

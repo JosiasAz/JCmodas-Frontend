@@ -489,7 +489,9 @@ main {
       flex-direction: column;
       align-items: stretch;
       text-align: center;
-      padding: 24px 0 8px;
+      // só em cima/embaixo: o "padding: ... 0" zerava a margem lateral do container e o botão encostava na borda
+      padding-top: 24px;
+      padding-bottom: 8px;
       .btn { width: 100%; }
     }
     .legal {

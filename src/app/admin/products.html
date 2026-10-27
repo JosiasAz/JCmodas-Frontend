@@ -129,6 +129,7 @@
       }
       <div class="images">
         @for (img of d.images; track img; let i = $index) {
+          <div class="photo-item">
           <div class="img" [class.cover]="i === 0">
             <img [src]="img | img" alt="" />
             @if (i === 0) {
@@ -143,17 +144,33 @@
               <button type="button" (click)="d.images.splice(i, 1)" aria-label="Remover foto"><app-icon name="trash" [size]="14" /></button>
             </div>
           </div>
+          <!-- na loja, escolher a cor mostra esta foto -->
+          @if (colorsOf(d).length) {
+            <select class="input img-color" [name]="'imgColor' + i" [ngModel]="d.image_colors[img] ?? ''"
+              (ngModelChange)="setImageColor(d, img, $event)" aria-label="Cor desta foto">
+              <option value="">Cor: todas</option>
+              @for (c of colorsOf(d); track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </select>
+          }
+          </div>
         }
       </div>
+      @if (missingPhotoColors(d).length) {
+        <p class="color-hint">Escolha embaixo de cada foto a cor dela. Assim, quando o cliente clicar na cor, a foto troca sozinha.
+          Ainda sem foto: <b>{{ missingPhotoColors(d).join(', ') }}</b>.</p>
+      }
       <app-image-input [multiple]="true" label="Adicionar fotos" (uploaded)="d.images.push($event)" />
 
       <h3 class="form-section">Tamanhos e estoque</h3>
       <div class="grid-buttons">
-        <input class="input grid-color" name="gridColor" [(ngModel)]="gridColor" placeholder="Cor (opcional)" />
+        <input class="input grid-color" name="gridColor" [(ngModel)]="gridColor" placeholder="Cores: Azul, Preta, Verde" />
         @for (g of grids; track g.label) {
           <button type="button" class="btn sm outline" (click)="addGrid(d, g.sizes)">+ {{ g.label }}</button>
         }
       </div>
+      <p class="color-hint">Digite as cores separadas por vírgula e clique na grade de tamanhos: cria todos os tamanhos de cada cor de uma vez.</p>
       @if (d.variants.length) {
         <table class="variants">
           <thead><tr><th>Tamanho</th><th>Cor</th><th>Estoque</th><th></th></tr></thead>

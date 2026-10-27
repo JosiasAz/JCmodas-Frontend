@@ -46,26 +46,24 @@
     </section>
   }
 
-  <!-- vantagens (só as que estão configuradas no painel) -->
+  <!-- vantagens: só as que estão ligadas no painel; sem nenhuma, a faixa não aparece -->
   @if (!isEmpty() && store.settings(); as s) {
-    <section class="perks container">
-      @if (s.free_shipping_min) {
-        <div><app-icon name="truck" [size]="26" /><span><strong>Frete grátis</strong> acima de {{ s.free_shipping_min | money }}</span></div>
-      } @else {
-        <div><app-icon name="truck" [size]="26" /><span><strong>Frete pelo CEP</strong> calculado na hora, pago por quem compra</span></div>
-      }
-      @if (s.pix_discount_percent) {
-        <div><app-icon name="pix" [size]="26" /><span><strong>{{ s.pix_discount_percent }}% OFF</strong> pagando no Pix</span></div>
-      }
-      @if (s.max_installments > 1) {
-        <div><app-icon name="card" [size]="26" /><span><strong>Até {{ s.max_installments }}x</strong> sem juros no cartão</span></div>
-      }
-      @if (s.pickup_enabled) {
-        <div><app-icon name="store" [size]="26" /><span><strong>Retire grátis</strong> na loja</span></div>
-      }
-      <!-- sempre aparece: a faixa nunca fica vazia e responde ao "e se não servir?" -->
-      <a routerLink="/trocas"><app-icon name="refresh" [size]="26" /><span><strong>Troca fácil</strong> em até {{ s.exchange_days }} dias</span></a>
-    </section>
+    @if (s.free_shipping_min || s.pix_discount_percent || s.max_installments > 1 || s.pickup_enabled) {
+      <section class="perks container">
+        @if (s.free_shipping_min) {
+          <div><app-icon name="truck" [size]="26" /><span><strong>Frete grátis</strong> acima de {{ s.free_shipping_min | money }}</span></div>
+        }
+        @if (s.pix_discount_percent) {
+          <div><app-icon name="pix" [size]="26" /><span><strong>{{ s.pix_discount_percent }}% OFF</strong> pagando no Pix</span></div>
+        }
+        @if (s.max_installments > 1) {
+          <div><app-icon name="card" [size]="26" /><span><strong>Até {{ s.max_installments }}x</strong> sem juros no cartão</span></div>
+        }
+        @if (s.pickup_enabled) {
+          <div><app-icon name="store" [size]="26" /><span><strong>Retire grátis</strong> na loja</span></div>
+        }
+      </section>
+    }
   }
 
   <!-- sem banner cadastrado a página ficava sem título principal (Google e leitores de tela) -->

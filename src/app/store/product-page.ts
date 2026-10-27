@@ -47,6 +47,11 @@ export class ProductPage {
   protected sizes = computed(() =>
     (this.product()?.variants ?? []).filter((v) => !this.colors().length || v.color === this.color()),
   );
+  /** posição da primeira foto marcada com a cor (ou -1) */
+  protected colorImage(color: string | null | undefined) {
+    const p = this.product();
+    return color && p ? p.images.findIndex((img) => p.image_colors?.[img] === color) : -1;
+  }
   protected installments = computed(() => {
     const price = this.product()?.final_price ?? 0;
     const n = Math.min(this.store.maxInstallments(), Math.floor(price / MIN_INSTALLMENT));
@@ -82,7 +87,13 @@ export class ProductPage {
           this.image.set(0);
           this.quantity.set(1);
           this.variant.set(null);
-          this.color.set(d.product.variants.find((v) => v.stock > 0)?.color ?? d.product.variants[0]?.color ?? null);
+          // começa na cor da foto de capa (se tiver estoque), senão na primeira cor disponível
+          const p = d.product;
+          const coverColor = p.image_colors?.[p.images[0]];
+          const color = p.variants.find((v) => v.stock > 0 && v.color === coverColor)?.color
+            ?? p.variants.find((v) => v.stock > 0)?.color ?? p.variants[0]?.color ?? null;
+          this.color.set(color);
+          this.image.set(Math.max(0, this.colorImage(color)));
           this.title.setTitle(`${d.product.name} | JC Moda`);
           // produto de tamanho único já vem selecionado
           const inStock = d.product.variants.filter((v) => v.stock > 0);
@@ -95,8 +106,22 @@ export class ProductPage {
   }
 
   pickColor(color: string) {
+    const index = this.colorImage(color);
+    if (index >= 0) this.image.set(index);
+    if (color === this.color()) return;
     this.color.set(color);
     this.variant.set(null);
+  }
+
+  /** clicar na foto de uma cor também escolhe a cor */
+  pickImage(index: number) {
+    this.image.set(index);
+    const p = this.product()!;
+    const color = p.image_colors?.[p.images[index]];
+    if (color && color !== this.color() && this.colors().includes(color)) {
+      this.color.set(color);
+      this.variant.set(null);
+    }
   }
 
   pickSize(v: Variant) {
@@ -123,7 +148,7 @@ export class ProductPage {
       variant_id: v.id!,
       quantity: this.quantity(),
       name: p.name,
-      image: p.images[0] ?? null,
+      image: p.images[Math.max(0, this.colorImage(v.color))] ?? null,
       detail: `Tam. ${v.size}${v.color ? ' · ' + v.color : ''}`,
     });
     if (goToCheckout) {

@@ -35,6 +35,8 @@ export interface Product {
   category_name: string | null;
   category_slug: string | null;
   images: string[];
+  /** foto -> cor */
+  image_colors: Record<string, string>;
   featured: boolean;
   is_new: boolean;
   active: boolean;
