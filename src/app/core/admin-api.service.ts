@@ -45,9 +45,8 @@ export class AdminApiService {
       : this.http.post<T>(`${this.base}/${resource}`, body);
   }
 
-  /** `archived`: o registro já estava em pedidos, então a API só tirou da loja em vez de apagar */
   remove(resource: Resource, id: number) {
-    return this.http.delete<{ archived?: boolean } | null>(`${this.base}/${resource}/${id}`);
+    return this.http.delete<void>(`${this.base}/${resource}/${id}`);
   }
 
   upload(file: File) {

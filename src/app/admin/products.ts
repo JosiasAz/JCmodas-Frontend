@@ -66,7 +66,7 @@ const GRIDS = [
 })
 export class Products extends CrudPage<Product> {
   protected override removeHint =
-    'Ele sai da loja e do painel. Se já aparece em algum pedido, fica guardado (desativado) para não perder o histórico.';
+    'Ele sai da loja e do painel. Pedidos antigos continuam mostrando o que foi comprado.';
   protected resource = 'products' as const;
   protected override noun = 'Produto';
   protected grids = GRIDS;

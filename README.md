@@ -17,7 +17,7 @@ Os dados são fornecidos pela API da loja, mantida em um repositório separado.
 - Avisos discretos: carrinho esquecido (ao voltar ao site) e cupom de boas-vindas (após 40 s ou na 2ª página, no máximo 1 vez por semana, nunca no carrinho/checkout)
 
 **Painel administrativo** (`/admin`)
-- Resumo de vendas e estoque, com o quanto já foi vendido no ano frente ao teto do MEI
+- Resumo de vendas e estoque
 - Gestão de pedidos, produtos, categorias (com tabela de medidas), promoções, cupons, combos e anúncios
 - Gestão de usuários com autenticação em duas etapas
 - Histórico de alterações

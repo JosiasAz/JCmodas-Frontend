@@ -100,12 +100,8 @@ export abstract class CrudPage<T extends { id: number }> implements OnInit {
     });
     if (!ok) return;
     this.api.remove(this.resource, item.id).subscribe({
-      next: (res) => {
-        this.toast.show(
-          res?.archived
-            ? `"${label}" já aparece em pedidos: saiu da loja, mas ficou guardado para o histórico`
-            : `${this.noun} excluído(a)`,
-        );
+      next: () => {
+        this.toast.show(`"${label}" excluído(a)`);
         this.load();
       },
       error: (err) => this.toast.error(errorMessage(err)),

@@ -123,7 +123,7 @@ import { ImgPipe } from '../shared/img.pipe';
 })
 export class AdminCombos extends CrudPage<Combo> {
   protected override removeHint =
-    'Ele sai da loja. Se já foi pedido alguma vez, fica guardado (desativado) para não perder o histórico.';
+    'Ele sai da loja e do painel. Pedidos antigos continuam mostrando o que foi comprado.';
   protected resource = 'combos' as const;
   protected override noun = 'Combo';
   protected products = signal<Product[]>([]);

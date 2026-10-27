@@ -303,9 +303,6 @@ export interface OrderPage {
 
 export interface Dashboard {
   revenue: number;
-  /** vendas do ano (pagas em diante) e o teto anual do MEI */
-  year_revenue: number;
-  mei_limit: number;
   orders: number;
   average_ticket: number;
   new_orders: number;
