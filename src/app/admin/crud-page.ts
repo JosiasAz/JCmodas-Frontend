@@ -1,6 +1,7 @@
 import { Directive, OnInit, computed, inject, signal } from '@angular/core';
 import { AdminApiService, Resource } from '../core/admin-api.service';
 import { errorMessage } from '../core/auth';
+import { ConfirmService } from '../core/confirm.service';
 import { ToastService } from '../core/toast.service';
 
 /**
@@ -12,6 +13,7 @@ import { ToastService } from '../core/toast.service';
 export abstract class CrudPage<T extends { id: number }> implements OnInit {
   protected api = inject(AdminApiService);
   protected toast = inject(ToastService);
+  protected confirm = inject(ConfirmService);
 
   protected items = signal<T[] | null>(null);
   protected draft = signal<any | null>(null);
@@ -21,6 +23,8 @@ export abstract class CrudPage<T extends { id: number }> implements OnInit {
   protected abstract resource: Resource;
   protected abstract blank(): any;
   protected noun = 'Registro';
+  /** explicação mostrada na confirmação de exclusão (padrão: "não pode ser desfeita") */
+  protected removeHint = '';
 
   // paginação feita na tela: a API devolve a lista inteira e aqui mostramos uma página por vez
   protected readonly pageSize = 15;
@@ -87,11 +91,21 @@ export abstract class CrudPage<T extends { id: number }> implements OnInit {
     });
   }
 
-  remove(item: T, label: string) {
-    if (!confirm(`Excluir "${label}"? Essa ação não pode ser desfeita.`)) return;
+  async remove(item: T, label: string) {
+    const ok = await this.confirm.ask({
+      title: `Excluir "${label}"?`,
+      message: this.removeHint || 'Essa ação não pode ser desfeita.',
+      confirmLabel: 'Excluir',
+      danger: true,
+    });
+    if (!ok) return;
     this.api.remove(this.resource, item.id).subscribe({
-      next: () => {
-        this.toast.show(`${this.noun} excluído(a)`);
+      next: (res) => {
+        this.toast.show(
+          res?.archived
+            ? `"${label}" já aparece em pedidos: saiu da loja, mas ficou guardado para o histórico`
+            : `${this.noun} excluído(a)`,
+        );
         this.load();
       },
       error: (err) => this.toast.error(errorMessage(err)),

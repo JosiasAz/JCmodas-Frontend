@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AdminApiService } from '../core/admin-api.service';
 import { errorMessage } from '../core/auth';
 import { Order, OrderPage, OrderStatus, PAYMENT_LABEL, STATUS_LABEL } from '../core/models';
+import { ConfirmService } from '../core/confirm.service';
 import { ToastService } from '../core/toast.service';
 import { Icon } from '../shared/icon';
 import { MoneyPipe } from '../shared/money.pipe';
@@ -132,6 +133,7 @@ export class Orders {
   private api = inject(AdminApiService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private confirm = inject(ConfirmService);
 
   /** ?status=novo (links do resumo) */
   readonly statusParam = input<OrderStatus | undefined>(undefined, { alias: 'status' });
@@ -183,9 +185,22 @@ export class Orders {
     return `https://wa.me/${full}?text=${encodeURIComponent(msg)}`;
   }
 
-  setStatus(o: Order, status: OrderStatus) {
+  async setStatus(o: Order, status: OrderStatus) {
     if (status === o.status) return;
-    if (status === 'cancelado' && !confirm('Cancelar este pedido? As peças voltam para o estoque.')) return;
+    if (status === 'cancelado') {
+      const ok = await this.confirm.ask({
+        title: `Cancelar o pedido ${o.code}?`,
+        message: 'As peças voltam para o estoque.',
+        confirmLabel: 'Cancelar pedido',
+        cancelLabel: 'Voltar',
+        danger: true,
+      });
+      if (!ok) {
+        // a lista de status já mostrava "cancelado": um objeto novo faz ela voltar ao status real
+        this.selected.update((s) => s && { ...s });
+        return;
+      }
+    }
     this.api.setOrderStatus(o.id, status).subscribe({
       next: (updated) => {
         this.toast.show(`Pedido ${updated.code}: ${STATUS_LABEL[updated.status]}`);

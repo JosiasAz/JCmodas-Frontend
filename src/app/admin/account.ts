@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormsModule, NgForm } from '@angular/forms';
 import { AdminApiService } from '../core/admin-api.service';
 import { AuthService, errorMessage } from '../core/auth';
+import { ConfirmService } from '../core/confirm.service';
 import { ToastService } from '../core/toast.service';
 import { Icon } from '../shared/icon';
 
@@ -146,6 +147,7 @@ export class Account {
   private api = inject(AdminApiService);
   private toast = inject(ToastService);
   private http = inject(HttpClient);
+  private confirm = inject(ConfirmService);
 
   protected mfaSetup = signal<{ secret: string; otpauth_uri: string } | null>(null);
   protected recoveryCodes = signal<string[] | null>(null);
@@ -193,8 +195,14 @@ export class Account {
     });
   }
 
-  disableMfa() {
-    if (!confirm('Desativar a verificação em duas etapas? O painel ficará protegido só pela senha.')) return;
+  async disableMfa() {
+    const ok = await this.confirm.ask({
+      title: 'Desativar a verificação em duas etapas?',
+      message: 'O painel ficará protegido só pela senha.',
+      confirmLabel: 'Desativar',
+      danger: true,
+    });
+    if (!ok) return;
     this.mfaError.set('');
     this.api.mfaDisable(this.mfaForm.password, this.mfaForm.code).subscribe({
       next: (res) => {

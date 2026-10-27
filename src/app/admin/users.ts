@@ -197,9 +197,15 @@ export class Users extends CrudPage<AdminUser> {
     return randomPassword();
   }
 
-  removeAccess(u: AdminUser) {
+  async removeAccess(u: AdminUser) {
     this.menuFor.set(null);
-    if (!confirm(`Remover o acesso de ${u.name}? A pessoa não consegue mais entrar no painel.`)) return;
+    const ok = await this.confirm.ask({
+      title: `Remover o acesso de ${u.name}?`,
+      message: 'A pessoa sai do painel na hora e não consegue mais entrar.',
+      confirmLabel: 'Remover acesso',
+      danger: true,
+    });
+    if (!ok) return;
     this.api.remove(this.resource, u.id).subscribe({
       next: () => {
         this.toast.show(`Acesso de ${u.name} removido`);

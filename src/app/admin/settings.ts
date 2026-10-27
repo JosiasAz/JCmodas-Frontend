@@ -6,6 +6,7 @@ import { AdminApiService } from '../core/admin-api.service';
 import { errorMessage } from '../core/auth';
 import { Coupon, StoreSettings } from '../core/models';
 import { StoreService } from '../core/store.service';
+import { ConfirmService } from '../core/confirm.service';
 import { ToastService } from '../core/toast.service';
 import { Icon } from '../shared/icon';
 import {
@@ -362,6 +363,7 @@ export class Settings {
   private toast = inject(ToastService);
   private store = inject(StoreService);
   private http = inject(HttpClient);
+  private confirm = inject(ConfirmService);
 
   protected readonly weekdays = WEEKDAYS;
   protected readonly retentionMonths = RETENTION_MONTHS;
@@ -484,9 +486,16 @@ export class Settings {
   // ---------------------------------------------------------------- privacidade
 
   /** Copia a política automática (já com os dados da loja) para o lojista editar. */
-  useTemplate(f: StoreSettings, kind: 'privacy' | 'exchange') {
+  async useTemplate(f: StoreSettings, kind: 'privacy' | 'exchange') {
     const field = kind === 'privacy' ? 'privacy_policy' : 'exchange_policy';
-    if (f[field]?.trim() && !confirm('Substituir o texto atual pela política automática?')) return;
+    if (f[field]?.trim()) {
+      const ok = await this.confirm.ask({
+        title: 'Substituir o seu texto?',
+        message: 'O que você escreveu será trocado pela política automática.',
+        confirmLabel: 'Substituir',
+      });
+      if (!ok) return;
+    }
     this.http
       .get<{ text: string }>(`/api/${kind}`, { params: { template: 'true' } })
       .subscribe((p) => this.form.set({ ...f, [field]: p.text }));
