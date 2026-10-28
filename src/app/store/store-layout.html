@@ -9,7 +9,7 @@
   <div class="container bar">
     <!-- esquerda: menu (celular) + logo -->
     <div class="left">
-      <button class="icon-btn mobile-only" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen()" aria-label="Abrir menu">
+      <button class="icon-btn mobile-only" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen()" [attr.aria-label]="menuOpen() ? 'Fechar menu' : 'Abrir menu'">
         <app-icon [name]="menuOpen() ? 'x' : 'menu'" [size]="22" />
       </button>
       <a routerLink="/" class="brand" aria-label="JC Moda Masculina - início">

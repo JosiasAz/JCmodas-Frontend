@@ -412,6 +412,14 @@ table.table {
   .actions { text-align: right; white-space: nowrap; }
 }
 
+/* ------------------------------------------------------------- trava o fundo */
+/* com menu, filtro, folha ou modal aberto o fundo não rola: no celular ele descia junto e o menu "descolava" na rolagem rápida */
+@media (pointer: coarse) {
+  html:has(.drawer.open, .filters.open, .sheet-backdrop, .modal-backdrop, .backdrop, .crop-backdrop) {
+    overflow: hidden;
+  }
+}
+
 /* ------------------------------------------------------------- modal (painel) */
 
 .modal-backdrop {
@@ -557,7 +565,7 @@ table.table {
     tr {
       position: relative;
       display: grid;
-      grid-template-columns: auto 1fr;
+      grid-template-columns: auto minmax(0, 1fr); /* coluna pode encolher: texto longo não empurra o cartão para fora em 320px */
       column-gap: 12px;
       padding: 12px 14px;
       background: #fff;
@@ -618,6 +626,7 @@ table.table {
       padding: 0 84px 8px 0;
       border-bottom-style: solid;
       font-size: 0.98rem;
+      overflow-wrap: anywhere;
       .muted { display: block; }
     }
     tr:has(> .cell-thumb:not(:empty)) .cell-main { grid-column: 2; }
