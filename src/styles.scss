@@ -110,6 +110,20 @@ button {
   clip: rect(0 0 0 0);
 }
 
+/* "Pular para o conteúdo": invisível até receber foco pelo teclado */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -100px;
+  z-index: 1000;
+  padding: 12px 16px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  &:focus { top: 8px; }
+}
+#conteudo:focus { outline: none; }
+
 /* ------------------------------------------------------------- botões */
 
 .btn {

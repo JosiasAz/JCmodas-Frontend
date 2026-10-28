@@ -32,7 +32,7 @@ interface Piece {
           <article class="combo card" [id]="c.slug">
             <div class="media">
               @if (c.image) {
-                <img [src]="c.image | img" [alt]="c.name" />
+                <img [src]="c.image | img: 800" [alt]="c.name" />
               }
               @if (c.savings) {
                 <span class="badge sale">Economize {{ c.savings | money }}</span>
@@ -46,7 +46,7 @@ interface Piece {
               <div class="pieces">
                 @for (piece of pieces()[c.id]; track $index) {
                   <div class="piece">
-                    <img [src]="piece.product.images[0] | img" alt="" />
+                    <img [src]="piece.product.images[0] | img: 400" alt="" />
                     <div class="piece-info">
                       <a [routerLink]="['/produto', piece.product.slug]">{{ piece.product.name }}</a>
                       <span class="muted small">Avulso: {{ piece.product.final_price | money }}</span>

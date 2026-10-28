@@ -9,7 +9,7 @@ import { renderGoogleButton } from '../core/google-signin';
   imports: [FormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="wrap">
+    <main class="wrap">
       @if (!mfaToken()) {
         <form class="card box" (ngSubmit)="submit()">
           <img src="logo/jc-logo.svg" alt="JC Moda Masculina" class="logo" />
@@ -24,7 +24,7 @@ import { renderGoogleButton } from '../core/google-signin';
             <input class="input" type="password" name="password" [(ngModel)]="password" autocomplete="current-password" required />
           </label>
           @if (error()) {
-            <p class="error">{{ error() }}</p>
+            <p class="error" role="alert">{{ error() }}</p>
           }
           <button class="btn lg block" type="submit" [disabled]="loading()">{{ loading() ? 'Entrando...' : 'Entrar' }}</button>
           @if (googleClientId()) {
@@ -51,7 +51,7 @@ import { renderGoogleButton } from '../core/google-signin';
               [placeholder]="useRecovery() ? 'XXXX-XXXX' : '000000'" [maxlength]="useRecovery() ? 9 : 6" />
           </label>
           @if (error()) {
-            <p class="error">{{ error() }}</p>
+            <p class="error" role="alert">{{ error() }}</p>
           }
           <button class="btn lg block" type="submit" [disabled]="loading()">{{ loading() ? 'Conferindo...' : 'Entrar' }}</button>
           <button type="button" class="link small" (click)="toggleRecovery()">
@@ -60,7 +60,7 @@ import { renderGoogleButton } from '../core/google-signin';
           <button type="button" class="link small muted back" (click)="restart()">Voltar</button>
         </form>
       }
-    </div>
+    </main>
   `,
   styles: `
     .wrap { min-height: 100vh; display: grid; place-items: center; padding: 20px; background: var(--sand); }
@@ -72,6 +72,7 @@ import { renderGoogleButton } from '../core/google-signin';
     .code { font-size: 1.4rem; letter-spacing: .3em; text-align: center; }
     .error { color: var(--sale); font-weight: 600; font-size: .88rem; }
     .back { display: inline-block; margin-top: 16px; }
+    a.back { margin: 4px 0 -12px; padding-block: 12px; } /* mesma posição do texto, área de toque de 44px */
     .link { margin-top: 14px; }
     .or { display: flex; align-items: center; gap: 10px; margin: 18px 0 14px; }
     .or::before, .or::after { content: ''; flex: 1; border-top: 1px solid currentColor; opacity: .3; }

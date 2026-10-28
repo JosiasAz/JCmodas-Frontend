@@ -2,6 +2,9 @@
   <div class="announcement">{{ text }}</div>
 }
 
+<!-- com <base href> um "#conteudo" comum voltaria para a home: o clique só move o foco -->
+<a class="skip-link" href="#conteudo" (click)="$event.preventDefault(); main.focus()">Pular para o conteúdo</a>
+
 <header class="header">
   <div class="container bar">
     <!-- esquerda: menu (celular) + logo -->
@@ -90,7 +93,7 @@
   </a>
 </aside>
 
-<main>
+<main #main id="conteudo" tabindex="-1">
   <router-outlet />
 </main>
 
@@ -168,7 +171,9 @@
 
 <!-- no carrinho e no checkout o botão cobria campos e o resumo do pedido -->
 @if (store.settings()?.whatsapp && !hideWhatsappFloat()) {
-  <a class="whatsapp-float" [href]="whatsappHelp()" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
-    <app-icon name="whatsapp" [size]="28" />
-  </a>
+  <aside aria-label="Atendimento">
+    <a class="whatsapp-float" [href]="whatsappHelp()" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
+      <app-icon name="whatsapp" [size]="28" />
+    </a>
+  </aside>
 }

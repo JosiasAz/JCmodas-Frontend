@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, effect, inject, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
@@ -25,6 +25,7 @@ const FORM_KEY = 'jc-checkout-form';
 })
 export class Checkout {
   private api = inject(ApiService);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
   private http = inject(HttpClient);
   private router = inject(Router);
   protected cart = inject(CartService);
@@ -134,6 +135,8 @@ export class Checkout {
     if (ngForm.invalid) {
       ngForm.control.markAllAsTouched();
       this.error.set('Preencha os campos destacados.');
+      // leva o cliente (e o leitor de tela) direto ao campo que falta, em vez de deixar o foco no botão
+      this.host.nativeElement.querySelector<HTMLElement>('.ng-invalid:is(input, select, textarea)')?.focus();
       return;
     }
     this.sending.set(true);

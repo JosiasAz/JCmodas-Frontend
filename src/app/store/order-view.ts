@@ -40,7 +40,7 @@ const FLOW: OrderStatus[] = ['novo', 'pago', 'separando', 'enviado', 'entregue']
         @for (item of o.items; track item.id) {
           <li>
             @if (item.image) {
-              <img [src]="item.image | img" alt="" />
+              <img [src]="item.image | img: 400" alt="" />
             }
             <div>
               <strong>{{ item.quantity }}x {{ item.name }}</strong>

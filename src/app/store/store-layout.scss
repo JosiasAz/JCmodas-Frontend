@@ -48,8 +48,10 @@ main {
 }
 
 .brand {
-  display: block;
+  display: flex;
+  align-items: center; /* logo continua no mesmo lugar */
   border-radius: 8px;
+  min-height: 44px; /* área de toque mínima no celular (o logo tem 42px) */
 
   img {
     height: 60px;

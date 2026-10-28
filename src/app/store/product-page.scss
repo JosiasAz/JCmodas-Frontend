@@ -467,8 +467,8 @@
 
 .perk-link {
   display: inline-block;
-  padding: 10px 0;
-  margin: -10px 0;
+  padding: 11px 0; /* 44px de toque sem mudar a posição do texto */
+  margin: -11px 0;
   text-decoration: underline;
   font-weight: 600;
 }

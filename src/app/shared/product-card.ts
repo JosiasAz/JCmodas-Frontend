@@ -15,9 +15,9 @@ import { ImgPipe } from './img.pipe';
     <a class="card" [routerLink]="['/produto', p.slug]" [class.soldout]="p.stock === 0"
       (pointerdown)="prefetch()" (mouseenter)="prefetch()">
       <div class="media">
-        <img [src]="p.images[0] | img" [alt]="p.name" loading="lazy" />
+        <img [src]="p.images[0] | img: 400" [srcset]="(p.images[0] | img: 400) + ' 400w, ' + (p.images[0] | img: 800) + ' 800w'" sizes="(max-width: 760px) 50vw, 300px" [alt]="p.name" loading="lazy" />
         @if (p.images[1]) {
-          <img class="alt" [src]="p.images[1] | img" alt="" loading="lazy" />
+          <img class="alt" [src]="p.images[1] | img: 400" [srcset]="(p.images[1] | img: 400) + ' 400w, ' + (p.images[1] | img: 800) + ' 800w'" sizes="(max-width: 760px) 50vw, 300px" alt="" loading="lazy" />
         }
         <div class="badges">
           @if (p.discount_percent) {

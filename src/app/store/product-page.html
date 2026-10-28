@@ -55,7 +55,7 @@
           <div class="thumbs" #thumbs [class.fade-a]="canPrev()" [class.fade-b]="canNext()" (scroll)="updateThumbNav()">
             @for (img of p.images; track img; let i = $index) {
               <button [class.on]="i === image()" (click)="pickImage(i)" [attr.aria-label]="'Foto ' + (i + 1)">
-                <img [src]="img | img" alt="" />
+                <img [src]="img | img: 400" alt="" />
               </button>
             }
           </div>
@@ -67,7 +67,7 @@
           }
         </div>
         <div class="photo">
-          <img [src]="p.images[image()] | img" [alt]="p.name" />
+          <img [src]="p.images[image()] | img: 1200" [alt]="p.name" />
           <div class="badges">
             @if (p.discount_percent) {
               <span class="badge sale">-{{ p.discount_percent }}%</span>
@@ -116,9 +116,9 @@
               <span class="option-label">Cor: <b>{{ color() }}</b></span>
               <div class="pills">
                 @for (c of colors(); track c) {
-                  <button class="pill" [class.on]="c === color()" [class.swatch]="colorImage(c) >= 0" (click)="pickColor(c)">
+                  <button class="pill" [class.on]="c === color()" [attr.aria-pressed]="c === color()" [class.swatch]="colorImage(c) >= 0" (click)="pickColor(c)">
                     @if (colorImage(c) >= 0) {
-                      <img [src]="p.images[colorImage(c)] | img" alt="" />
+                      <img [src]="p.images[colorImage(c)] | img: 400" alt="" />
                     }
                     {{ c }}
                   </button>
@@ -143,13 +143,13 @@
             </div>
             <div class="pills">
               @for (v of sizes(); track v.id) {
-                <button class="pill size" [class.on]="v.id === variant()?.id" [class.out]="!v.stock" [disabled]="!v.stock" (click)="pickSize(v)">
+                <button class="pill size" [class.on]="v.id === variant()?.id" [attr.aria-pressed]="v.id === variant()?.id" [class.out]="!v.stock" [disabled]="!v.stock" (click)="pickSize(v)">
                   {{ v.size }}
                 </button>
               }
             </div>
             @if (sizeError()) {
-              <p class="error">Escolha um tamanho para continuar</p>
+              <p class="error" role="alert">Escolha um tamanho para continuar</p>
             }
             @if (variant(); as v) {
               @if (v.stock <= lowStock) {

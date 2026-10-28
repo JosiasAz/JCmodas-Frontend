@@ -168,7 +168,7 @@
           @for (line of q.lines; track line.key) {
             <li>
               @if (line.image) {
-                <img [src]="line.image | img" alt="" />
+                <img [src]="line.image | img: 400" alt="" />
               }
               <div>
                 <strong>{{ line.quantity }}x {{ line.name }}</strong>
@@ -181,7 +181,7 @@
         <app-cart-totals [quote]="q" />
 
         @if (error()) {
-          <p class="error">{{ error() }}</p>
+          <p class="error" role="alert">{{ error() }}</p>
         }
         <button class="btn lg block" type="submit" [disabled]="sending() || !q.can_checkout">
           @if (sending()) {

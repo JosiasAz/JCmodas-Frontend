@@ -25,7 +25,7 @@
         @for (line of q.lines; track line.key) {
           <article class="line card" [class.unavailable]="!line.available">
             @if (line.image) {
-              <img [src]="line.image | img" [alt]="line.name" />
+              <img [src]="line.image | img: 400" [alt]="line.name" />
             }
             <div class="info">
               <h3>{{ line.name }}</h3>
