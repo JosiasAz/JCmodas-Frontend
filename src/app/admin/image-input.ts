@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, input, model, output, signa
 import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../core/admin-api.service';
 import { errorMessage } from '../core/auth';
+import { ConfirmService } from '../core/confirm.service';
 import { ToastService } from '../core/toast.service';
 import { Icon } from '../shared/icon';
 import { ImgPipe } from '../shared/img.pipe';
@@ -62,12 +63,19 @@ import { ImageCropper } from './image-cropper';
           }
           <div class="saved-grid">
             @for (p of photos; track p.url) {
-              <button type="button" class="saved-item" [class.on]="chosen().includes(p.url)" (click)="pick(p.url)"
-                [attr.aria-pressed]="multiple() ? chosen().includes(p.url) : null">
-                <img [src]="p.url | img: 400" alt="" loading="lazy" />
-                @if (p.in_use) { <span class="tag">em uso</span> }
-                @if (chosen().includes(p.url)) { <span class="check"><app-icon name="check" [size]="14" /></span> }
-              </button>
+              <div class="saved-cell">
+                <button type="button" class="saved-item" [class.on]="chosen().includes(p.url)" (click)="pick(p.url)"
+                  [attr.aria-pressed]="multiple() ? chosen().includes(p.url) : null">
+                  <img [src]="p.url | img: 400" alt="" loading="lazy" />
+                  @if (p.in_use) { <span class="tag">em uso</span> }
+                  @if (chosen().includes(p.url)) { <span class="check"><app-icon name="check" [size]="14" /></span> }
+                </button>
+                @if (!p.in_use) {
+                  <button type="button" class="icon-btn trash" (click)="removeSaved(p.url)" aria-label="Apagar foto">
+                    <app-icon name="trash" [size]="15" />
+                  </button>
+                }
+              </div>
             }
           </div>
           @if (multiple()) {
@@ -98,7 +106,9 @@ import { ImageCropper } from './image-cropper';
     .camera { display: none; }
     .saved-backdrop { z-index: 110; } /* abre por cima do formulário do produto */
     .saved-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin: 14px 0; }
-    .saved-item { position: relative; aspect-ratio: 84 / 100; padding: 0; border: 2px solid transparent; border-radius: 8px;
+    .saved-cell { position: relative;
+      .trash { position: absolute; top: 4px; left: 4px; width: 30px; height: 30px; background: #fff; color: var(--sale); } }
+    .saved-item { position: relative; width: 100%; aspect-ratio: 84 / 100; padding: 0; border: 2px solid transparent; border-radius: 8px;
       overflow: hidden; background: var(--sand); cursor: pointer;
       img { width: 100%; height: 100%; object-fit: cover; display: block; }
       &.on { border-color: var(--ink, #111); }
@@ -114,6 +124,7 @@ import { ImageCropper } from './image-cropper';
 export class ImageInput {
   private api = inject(AdminApiService);
   private toast = inject(ToastService);
+  private confirm = inject(ConfirmService);
 
   readonly value = model<string | null>(null);
   readonly multiple = input(false);
@@ -147,6 +158,24 @@ export class ImageInput {
       return;
     }
     this.chosen.update((list) => (list.includes(url) ? list.filter((u) => u !== url) : [...list, url]));
+  }
+
+  async removeSaved(url: string) {
+    const ok = await this.confirm.ask({
+      title: 'Apagar esta foto?',
+      message: 'Ela sai do banco de vez. Fotos em uso na loja não aparecem com a lixeira.',
+      confirmLabel: 'Apagar',
+      danger: true,
+    });
+    if (!ok) return;
+    this.api.deleteUpload(url).subscribe({
+      next: () => {
+        this.saved.update((list) => list?.filter((p) => p.url !== url) ?? null);
+        this.chosen.update((list) => list.filter((u) => u !== url));
+        this.toast.show('Foto apagada');
+      },
+      error: (err) => this.toast.error(errorMessage(err)),
+    });
   }
 
   useChosen() {

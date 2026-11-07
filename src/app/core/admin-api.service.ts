@@ -54,6 +54,10 @@ export class AdminApiService {
     return this.http.get<{ url: string; created_at: string; in_use: boolean }[]>(`${this.base}/uploads`);
   }
 
+  deleteUpload(url: string) {
+    return this.http.delete<void>(`${this.base}/uploads/${url.split('/').pop()}`);
+  }
+
   upload(file: File) {
     return from(shrinkImage(file)).pipe(
       switchMap((image) => {
