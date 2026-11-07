@@ -22,6 +22,8 @@ export interface Variant {
   size: string;
   color: string | null;
   stock: number;
+  /** estoque mostrado ao abrir o formulário: o servidor aplica só a diferença */
+  stock_before?: number;
 }
 
 export interface Product {

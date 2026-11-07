@@ -121,7 +121,10 @@ export class Products extends CrudPage<Product> {
   }
 
   protected override toForm(item: Product) {
-    return { ...structuredClone(item), image_colors: { ...item.image_colors } };
+    const form = { ...structuredClone(item), image_colors: { ...item.image_colors } };
+    // guarda o estoque de agora: se alguém comprar enquanto o formulário está aberto, a venda não some
+    form.variants = form.variants.map((v: Variant) => ({ ...v, stock_before: v.stock }));
+    return form;
   }
 
   /** cores já cadastradas nos tamanhos, na ordem em que aparecem */
