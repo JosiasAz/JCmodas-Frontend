@@ -161,9 +161,12 @@ export interface StoreSettings {
   opening_hours: string;
   /** acima disso, a entrega mais barata sai grátis */
   free_shipping_min: number;
-  // só no painel: frete pelo Melhor Envio (o token nunca volta da API; enviar vazio mantém o salvo)
-  melhor_envio_token?: string;
-  has_melhor_envio_token?: boolean;
+  // só no painel: frete pelo Melhor Envio (secret e tokens nunca voltam da API; secret vazio mantém o salvo)
+  melhor_envio_client_id?: string;
+  melhor_envio_client_secret?: string;
+  has_melhor_envio_secret?: boolean;
+  melhor_envio_connected?: boolean;
+  melhor_envio_expires_at?: string | null;
   melhor_envio_sandbox?: boolean;
   package_width_cm?: number;
   package_height_cm?: number;

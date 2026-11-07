@@ -85,6 +85,11 @@
             <small>Buscando...</small>
           } @else if (cepStatus() === 'error') {
             <small class="warn">CEP não encontrado. Você pode informar de novo no checkout.</small>
+          } @else if (q.shipping_options.length) {
+            <small class="ok">{{ dest.city() ? dest.city() + '/' + dest.state() + ' — ' : '' }}entrega a partir de
+              {{ q.shipping_options[0].free ? 'grátis' : (q.shipping_options[0].price | money) }}. Você escolhe a opção no checkout.</small>
+          } @else if (q.shipping_pending && q.shipping_note && dest.ready()) {
+            <small class="warn">{{ q.shipping_note }}</small>
           } @else if (dest.city()) {
             <small class="ok">{{ dest.city() }}/{{ dest.state() }} — o cliente paga a entrega</small>
           } @else {
@@ -95,11 +100,12 @@
         <app-cart-totals [quote]="q" [pixHint]="true" />
         <p class="muted small note">{{ store.settings()?.pickup_enabled ? 'Retirada na loja é grátis.' : 'O frete é calculado pelo CEP e pago na finalização.' }}</p>
 
-        <a class="btn lg block" routerLink="/checkout" [class.disabled]="!q.can_checkout"
-          [attr.aria-disabled]="!q.can_checkout" (click)="!q.can_checkout && $event.preventDefault()">
+        <!-- só itens indisponíveis travam aqui; o frete se resolve no checkout -->
+        <a class="btn lg block" routerLink="/checkout" [class.disabled]="!itemsOk(q)"
+          [attr.aria-disabled]="!itemsOk(q)" (click)="!itemsOk(q) && $event.preventDefault()">
           Finalizar compra <app-icon name="arrow" [size]="18" />
         </a>
-        @if (!q.can_checkout) {
+        @if (!itemsOk(q)) {
           <p class="warn small">Ajuste os itens indisponíveis para continuar.</p>
         }
         <div class="safe muted small"><app-icon name="shield" [size]="16" /> Compra segura</div>

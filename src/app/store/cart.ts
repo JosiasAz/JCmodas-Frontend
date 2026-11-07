@@ -67,6 +67,11 @@ export class Cart {
     });
   }
 
+  /** carrinho pode seguir para o checkout: há itens e todos estão disponíveis (o frete fica para o checkout) */
+  protected itemsOk(q: Quote) {
+    return q.lines.length > 0 && q.lines.every((l) => l.available);
+  }
+
   onCep(text: string) {
     const cep = formatCep(text);
     this.dest.set(cep);

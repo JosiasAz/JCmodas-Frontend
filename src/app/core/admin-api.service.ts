@@ -54,6 +54,16 @@ export class AdminApiService {
     return this.http.get<{ url: string; created_at: string; in_use: boolean }[]>(`${this.base}/uploads`);
   }
 
+  /** endereço que vai no campo "Callback" do aplicativo do Melhor Envio */
+  melhorEnvioCallback() {
+    return this.http.get<{ callback_url: string }>(`${this.base}/melhor-envio/callback-url`);
+  }
+
+  /** link de autorização do Melhor Envio (o painel abre e o lojista aprova) */
+  melhorEnvioConnect() {
+    return this.http.post<{ url: string }>(`${this.base}/melhor-envio/connect`, {});
+  }
+
   deleteUpload(url: string) {
     return this.http.delete<void>(`${this.base}/uploads/${url.split('/').pop()}`);
   }

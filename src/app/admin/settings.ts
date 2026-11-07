@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -32,7 +33,7 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
 
 @Component({
   selector: 'app-settings',
-  imports: [FormsModule, RouterLink, Icon],
+  imports: [FormsModule, RouterLink, Icon, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page-head">
@@ -211,16 +212,40 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
           } @else {
             <p class="note small">Preencha o CEP da loja no endereço acima para o sistema saber de onde o pedido sai.</p>
           }
-          <label class="field">
-            <span>Token do Melhor Envio
-              @if (f.has_melhor_envio_token) { <b class="ok-tag">configurado</b> } @else { <b class="warn-tag">falta configurar</b> }
-            </span>
-            <input class="input" type="password" name="meToken" autocomplete="off" [(ngModel)]="f.melhor_envio_token"
-              [placeholder]="f.has_melhor_envio_token ? 'Deixe vazio para manter o token salvo' : 'Cole aqui o token'" />
-            <small>No melhorenvio.com.br: Integrações → Permissões de acesso → Gerar novo token (permissão “Cotação de fretes”).</small>
-          </label>
-          <label class="check"><input type="checkbox" name="meSandbox" [(ngModel)]="f.melhor_envio_sandbox" />
-            Modo de teste (token criado no sandbox.melhorenvio.com.br)</label>
+          <div class="me-box">
+            <p class="me-status">Melhor Envio:
+              @if (f.melhor_envio_connected) {
+                <b class="ok-tag">conectado</b>
+                @if (f.melhor_envio_expires_at) { <span class="muted small">renova sozinho (atual vale até {{ f.melhor_envio_expires_at | date: 'dd/MM' }})</span> }
+              } @else { <b class="warn-tag">não conectado</b> }
+            </p>
+            <ol class="me-steps small">
+              <li>No melhorenvio.com.br, abra <b>Integrações → Área Dev. → Cadastrar aplicativo</b>.</li>
+              <li>No campo <b>Callback</b>, cole este endereço:
+                <span class="callback">
+                  <code>{{ meCallback() || 'carregando...' }}</code>
+                  <button type="button" class="btn sm ghost" (click)="copyCallback()" [disabled]="!meCallback()"><app-icon name="copy" [size]="14" /> Copiar</button>
+                </span>
+              </li>
+              <li>Copie o <b>Client ID</b> e o <b>Secret</b> do aplicativo para os campos abaixo e clique em <b>Salvar</b>.</li>
+              <li>Clique em <b>Conectar ao Melhor Envio</b> e aprove. Pronto: o sistema renova a conexão sozinho.</li>
+            </ol>
+            <div class="row">
+              <label class="field"><span>Client ID</span>
+                <input class="input" name="meClientId" inputmode="numeric" autocomplete="off" [(ngModel)]="f.melhor_envio_client_id" /></label>
+              <label class="field"><span>Secret
+                  @if (f.has_melhor_envio_secret) { <b class="ok-tag">salvo</b> }</span>
+                <input class="input" type="password" name="meSecret" autocomplete="off" [(ngModel)]="f.melhor_envio_client_secret"
+                  [placeholder]="f.has_melhor_envio_secret ? 'Deixe vazio para manter o salvo' : 'Cole aqui o Secret'" /></label>
+            </div>
+            <label class="check"><input type="checkbox" name="meSandbox" [(ngModel)]="f.melhor_envio_sandbox" />
+              Modo de teste (aplicativo criado no sandbox.melhorenvio.com.br)</label>
+            <button type="button" class="btn" (click)="connectMelhorEnvio()"
+              [disabled]="!f.melhor_envio_client_id || !f.has_melhor_envio_secret">
+              {{ f.melhor_envio_connected ? 'Conectar de novo' : 'Conectar ao Melhor Envio' }}
+            </button>
+            @if (!f.has_melhor_envio_secret) { <small class="muted"> Salve o Client ID e o Secret primeiro.</small> }
+          </div>
           <p class="small"><b>Embalagem de 1 peça</b> (o Melhor Envio junta as peças do pedido):</p>
           <div class="rates">
             <label class="field"><span>Largura (cm)</span>
@@ -384,6 +409,12 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
     .ok-tag, .warn-tag { margin-left: 6px; font-size: .75rem; padding: 1px 8px; border-radius: 999px; }
     .ok-tag { background: #e6f4ea; color: #1e6b34; }
     .warn-tag { background: #fdecea; color: #a52a1f; }
+    .me-box { display: flex; flex-direction: column; gap: 10px; padding: 14px; margin: 10px 0 16px; border: 1px solid var(--line);
+      border-radius: var(--radius-sm); }
+    .me-status { margin: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .me-steps { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+    .callback { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;
+      code { padding: 4px 8px; border-radius: 6px; background: var(--sand); word-break: break-all; } }
 
     .cep-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
       .field { flex: 0 1 180px; } .cep-status { padding-top: 8px; } a { text-decoration: underline; } }
@@ -452,15 +483,33 @@ export class Settings {
   protected cepStatus = signal<'' | 'loading' | 'error'>('');
   private numberInput = viewChild<ElementRef<HTMLInputElement>>('numberInput');
 
+  protected meCallback = signal('');
+
+  copyCallback() {
+    navigator.clipboard?.writeText(this.meCallback()).then(() => this.toast.show('Endereço copiado'));
+  }
+
+  /** abre a autorização do Melhor Envio; ele volta para cá com ?melhorenvio=ok|erro */
+  connectMelhorEnvio() {
+    this.api.melhorEnvioConnect().subscribe({
+      next: ({ url }) => (window.location.href = url),
+      error: (err) => this.toast.error(errorMessage(err)),
+    });
+  }
+
   constructor() {
     this.api.settings().subscribe((s) => this.load(s));
+    this.api.melhorEnvioCallback().subscribe(({ callback_url }) => this.meCallback.set(callback_url));
+    const result = new URLSearchParams(window.location.search).get('melhorenvio');
+    if (result === 'ok') this.toast.show('Melhor Envio conectado! O frete já é calculado pelo CEP.');
+    if (result === 'erro') this.toast.error('Não deu para conectar ao Melhor Envio. Confira o Client ID, o Secret e o Callback e tente de novo.');
     this.api.list<Coupon>('coupons').subscribe((list) => this.coupons.set(list));
   }
 
   private load(s: StoreSettings) {
     s.cnpj = formatCnpj(s.cnpj);
     s.pix_key = formatPixKey(s.pix_key);
-    s.melhor_envio_token = '';
+    s.melhor_envio_client_secret = '';
     this.form.set(s);
     this.whatsappText.set(formatWhatsapp(s.whatsapp));
     this.week.set(parseHours(s.opening_hours));
