@@ -89,6 +89,10 @@ const NEXT: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>>
           @if (o.notes) {
             <p class="notes"><b>Observação do cliente:</b> {{ o.notes }}</p>
           }
+          @if (o.shipping_method && o.delivery_method === 'entrega') {
+            <p class="ship-method"><app-icon name="truck" [size]="16" /> <b>Enviar por:</b> {{ o.shipping_method }}
+              ({{ o.shipping ? (o.shipping | money) : 'frete grátis' }})</p>
+          }
 
           <app-order-view [order]="o" />
 
@@ -130,6 +134,7 @@ const NEXT: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>>
       div { display: flex; flex-direction: column; } }
     .notes { padding: 12px 14px; background: var(--warn-soft); border-radius: var(--radius-sm); font-size: .9rem; }
     .status-select { width: auto; min-height: 46px; }
+    .ship-method { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; font-size: .9rem; }
   `,
 })
 export class Orders {

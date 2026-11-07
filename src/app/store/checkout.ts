@@ -35,6 +35,8 @@ export class Checkout {
   protected delivery = signal<DeliveryMethod>('entrega');
   protected payment = signal<PaymentMethod>('pix');
   protected quote = signal<Quote | null>(null);
+  /** entrega escolhida (PAC, SEDEX...); null = a mais barata */
+  protected shippingService = signal<number | null>(null);
   protected sending = signal(false);
   protected error = signal('');
   protected cepStatus = signal<'' | 'loading' | 'error'>('');
@@ -77,6 +79,7 @@ export class Checkout {
           ...this.cart.request(),
           delivery_method: this.delivery(),
           payment_method: this.payment(),
+          shipping_service: this.shippingService(),
           ...dest,
         })
         .subscribe((q) => {
@@ -148,6 +151,7 @@ export class Checkout {
         email: this.form.email || null,
         delivery_method: this.delivery(),
         payment_method: this.payment(),
+        shipping_service: this.quote()?.shipping_service ?? null,
         installments: this.payment() === 'cartao' ? Number(this.form.installments) : 1,
         // na retirada não mandamos endereço
         ...(isDelivery ? {} : { cep: '', street: '', number: '', complement: '', district: '', city: '', state: '' }),

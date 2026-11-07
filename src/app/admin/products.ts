@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Category, Product, Variant } from '../core/models';
@@ -19,7 +20,7 @@ const GRIDS = [
 
 @Component({
   selector: 'app-products',
-  imports: [FormsModule, RouterLink, RouterLinkActive, Icon, MoneyPipe, ImageInput, Pager, ImgPipe],
+  imports: [FormsModule, NgTemplateOutlet, RouterLink, RouterLinkActive, Icon, MoneyPipe, ImageInput, Pager, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './products.html',
   styles: `
@@ -37,16 +38,31 @@ const GRIDS = [
     }
     .head-actions { display: flex; gap: 8px; flex-wrap: wrap; label { cursor: pointer; } }
     .fab { display: none; }
-    .grid-buttons { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
-    .grid-color { max-width: 240px; min-height: 36px; }
-    .photo-item { display: flex; flex-direction: column; }
-    .img-color { width: 84px; min-height: 30px; padding: 2px 4px; font-size: .75rem; margin-top: 4px; }
+    .grid-buttons { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0; }
     .color-hint { font-size: .82rem; color: var(--muted); margin: 0 0 10px; }
-    .variants-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .variants { width: 100%; border-collapse: collapse; margin-bottom: 8px;
-      th { text-align: left; font-size: .75rem; color: var(--muted); padding: 4px 6px; }
-      td { padding: 4px 6px; }
-      .input { min-height: 38px; padding: 6px 10px; } }
+    .variants-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 4px 4px 12px; border-radius: 999px;
+      background: var(--sand); font-weight: 600; font-size: .88rem;
+      button { display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 50%; background: none; cursor: pointer; } }
+    .add-color { display: flex; gap: 6px; flex-wrap: wrap; .input { width: 180px; min-height: 36px; } }
+    .color-cards { display: grid; gap: 12px; }
+    .color-card { border: 1px solid var(--line, #ddd); border-radius: 12px; padding: 12px; display: grid; gap: 10px; min-width: 0; }
+    .card-head { display: flex; align-items: center; gap: 8px; justify-content: space-between;
+      h4 { margin: 0; font-size: 1rem; }
+      .color-name { flex: 1; max-width: 260px; min-height: 38px; font-weight: 600; } }
+    .color-card .images { margin-bottom: 0; }
+    .sizes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .size { display: inline-flex; align-items: center; border: 1px solid var(--line, #ddd); border-radius: 8px; overflow: hidden;
+      &.on { border-color: var(--ink); }
+      .stock { width: 64px; min-height: 36px; padding: 4px 6px; border: 0; border-left: 1px solid var(--line, #ddd); border-radius: 0; } }
+    .size-toggle { min-width: 44px; min-height: 36px; padding: 0 10px; border: 0; background: none; cursor: pointer; font-weight: 600; }
+    .size.on .size-toggle { background: var(--ink); color: #fff; }
+    .add-size { display: inline-flex; gap: 4px; align-items: center; .input { width: 80px; min-height: 36px; } }
+    @media (pointer: coarse) {
+      .size-toggle, .size .stock, .add-size .input, .add-color .input, .card-head .color-name, .chip button { min-height: 44px; }
+      .chip button { width: 44px; }
+    }
     .flags { display: flex; gap: 18px; flex-wrap: wrap; margin: 6px 0 12px; }
     .total-stock { font-size: .85rem; color: var(--muted); }
     @media (max-width: 720px) {
@@ -61,9 +77,7 @@ const GRIDS = [
       .images { display: grid; grid-template-columns: repeat(3, 1fr); }
       .img { width: auto; height: auto; aspect-ratio: 4 / 5;
         button { padding: 6px 8px; font-size: .78rem; } }
-      .photo-item .img-color { width: 100%; }
-      .grid-buttons { .grid-color { max-width: none; flex-basis: 100%; } .btn { flex: 1; } }
-      .variants .icon-btn { width: 36px; }
+      .add-color { flex-basis: 100%; .input { flex: 1; width: auto; } }
       .flags { flex-direction: column; gap: 12px; }
     }
   `,
@@ -77,7 +91,6 @@ export class Products extends CrudPage<Product> {
   protected categories = signal<Category[]>([]);
   protected search = signal('');
   protected categoryFilter = signal<number | null>(null);
-  protected gridColor = '';
   /** Fotos do atalho "Cadastrar com fotos" ainda subindo. */
   protected photoUploads = signal(0);
 
@@ -127,20 +140,143 @@ export class Products extends CrudPage<Product> {
     return form;
   }
 
+  /** cartões de cor do formulário (null = "Sem cor") */
+  protected colors = signal<(string | null)[]>([null]);
+  /** tamanhos mostrados como botões em cada cor */
+  protected sizeOptions = signal<string[]>([]);
+  /** variantes desmarcadas nesta edição: remarcar devolve a mesma (com id e estoque) */
+  private removed = new Map<string, Variant>();
+
+  override open(item?: Product) {
+    super.open(item);
+    const d = this.draft();
+    const named = [...new Set([...this.colorsOf(d), ...(Object.values(d.image_colors ?? {}) as string[])])];
+    const hasNull = !named.length || d.variants.some((v: Variant) => !this.colorOf(v));
+    this.colors.set(hasNull ? [null, ...named] : named);
+    const used = this.sizesOf(d.variants);
+    this.sizeOptions.set(used.length ? used : this.suggestedSizes(d.category_id));
+    this.removed.clear();
+  }
+
+  private colorOf(v: Variant) {
+    return v.color?.trim() || null;
+  }
+
+  private sizesOf(variants: Variant[]): string[] {
+    return [...new Set(variants.map((v) => v.size?.trim()).filter(Boolean))];
+  }
+
   /** cores já cadastradas nos tamanhos, na ordem em que aparecem */
   colorsOf(form: any): string[] {
-    return [...new Set<string>(form.variants.map((v: Variant) => v.color?.trim()).filter(Boolean))];
+    return [...new Set<string>(form.variants.map((v: Variant) => this.colorOf(v)).filter(Boolean))];
   }
 
-  setImageColor(form: any, img: string, color: string) {
-    if (color) form.image_colors[img] = color;
-    else delete form.image_colors[img];
+  /** grade do último produto cadastrado na mesma categoria; senão P M G GG */
+  private suggestedSizes(categoryId: number | null): string[] {
+    const last = (this.items() ?? [])
+      .filter((p) => categoryId && p.category_id === categoryId && p.variants?.length)
+      .sort((a, b) => b.id - a.id)[0];
+    const sizes = last ? this.sizesOf(last.variants) : [];
+    return sizes.length ? sizes : GRIDS[0].sizes;
   }
 
-  /** cores que ainda não têm foto marcada (para lembrar o lojista) */
-  missingPhotoColors(form: any): string[] {
-    const linked = new Set(Object.values(form.image_colors ?? {}));
-    return form.images.length ? this.colorsOf(form).filter((c) => !linked.has(c)) : [];
+  /** produto novo ainda sem tamanho marcado: trocar a categoria troca a grade sugerida */
+  onCategory(d: any) {
+    if (!d.id && !d.variants.length) this.sizeOptions.set(this.suggestedSizes(d.category_id));
+  }
+
+  useGrid(sizes: string[]) {
+    this.sizeOptions.update((cur) => [...new Set([...sizes, ...cur])]);
+  }
+
+  variantOf(d: any, color: string | null, size: string): Variant | undefined {
+    return d.variants.find((v: Variant) => this.colorOf(v) === color && v.size?.trim() === size);
+  }
+
+  toggleSize(d: any, color: string | null, size: string) {
+    const key = `${color}|${size}`;
+    const v = this.variantOf(d, color, size);
+    if (v) {
+      this.removed.set(key, v);
+      d.variants.splice(d.variants.indexOf(v), 1);
+    } else {
+      d.variants.push(this.removed.get(key) ?? { size, color, stock: 0 });
+      this.removed.delete(key);
+    }
+  }
+
+  addSize(d: any, color: string | null, input: HTMLInputElement) {
+    const size = input.value.trim();
+    input.value = '';
+    if (!size) return;
+    if (!this.sizeOptions().includes(size)) this.sizeOptions.update((list) => [...list, size]);
+    if (!this.variantOf(d, color, size)) this.toggleSize(d, color, size);
+  }
+
+  addColor(d: any, input: HTMLInputElement) {
+    const color = input.value.trim();
+    if (!color) return;
+    if (this.colors().some((c) => c?.toLowerCase() === color.toLowerCase())) {
+      this.toast.error(`A cor "${color}" já está na lista.`);
+      return;
+    }
+    input.value = '';
+    const list = this.colors();
+    if (list.length === 1 && list[0] === null) {
+      // primeira cor: o cartão "Sem cor" vira esta cor, com os tamanhos e estoque que já tinha
+      d.variants.forEach((v: Variant) => (v.color = color));
+      this.colors.set([color]);
+      return;
+    }
+    // copia os tamanhos marcados de uma cor que já existe, com estoque zerado
+    const model = list.find((c) => d.variants.some((v: Variant) => this.colorOf(v) === c));
+    const sizes = this.sizesOf(d.variants.filter((v: Variant) => this.colorOf(v) === model));
+    sizes.forEach((size) => d.variants.push({ size, color, stock: 0 }));
+    this.colors.set([...list, color]);
+  }
+
+  renameColor(d: any, old: string, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const name = input.value.trim();
+    if (name === old) return;
+    if (!name || this.colors().some((c) => c?.toLowerCase() === name.toLowerCase() && c !== old)) {
+      if (name) this.toast.error(`A cor "${name}" já está na lista.`);
+      input.value = old;
+      return;
+    }
+    d.variants.forEach((v: Variant) => this.colorOf(v) === old && (v.color = name));
+    for (const url of Object.keys(d.image_colors)) if (d.image_colors[url] === old) d.image_colors[url] = name;
+    this.colors.update((list) => list.map((c) => (c === old ? name : c)));
+  }
+
+  async removeColor(d: any, color: string | null) {
+    const ok = await this.confirm.ask({
+      title: color ? `Remover a cor "${color}"?` : 'Remover os tamanhos sem cor?',
+      message: 'Os tamanhos e o estoque desta cor saem do produto. As fotos dela continuam, como fotos gerais.',
+      confirmLabel: 'Remover',
+      danger: true,
+    });
+    if (!ok) return;
+    d.variants = d.variants.filter((v: Variant) => this.colorOf(v) !== color);
+    for (const url of Object.keys(d.image_colors)) if (d.image_colors[url] === color) delete d.image_colors[url];
+    const rest = this.colors().filter((c) => c !== color);
+    this.colors.set(rest.length ? rest : [null]);
+  }
+
+  /** fotos de uma cor; null = fotos gerais (sem cor marcada) */
+  photosOf(d: any, color: string | null): string[] {
+    return d.images.filter((url: string) => (d.image_colors[url] || null) === color);
+  }
+
+  addPhoto(d: any, url: string, color: string | null) {
+    if (!d.images.includes(url)) d.images.push(url);
+    if (color) d.image_colors[url] = color;
+    else delete d.image_colors[url];
+  }
+
+  removePhoto(d: any, url: string) {
+    d.images.splice(d.images.indexOf(url), 1);
+    delete d.image_colors[url];
   }
 
   protected override toPayload(form: any) {
@@ -155,28 +291,9 @@ export class Products extends CrudPage<Product> {
     return form.variants.reduce((n: number, v: Variant) => n + (Number(v.stock) || 0), 0);
   }
 
-  /** "Azul, Preta" vira duas cores; vazio = sem cor */
-  private gridColors(): (string | null)[] {
-    const colors = this.gridColor.split(/[,;]/).map((c) => c.trim()).filter(Boolean);
-    return colors.length ? colors : [null];
-  }
-
-  addGrid(form: any, sizes: string[]) {
-    for (const color of this.gridColors()) {
-      for (const size of sizes) {
-        const exists = form.variants.some((v: Variant) => v.size === size && (v.color || null) === color);
-        if (!exists) form.variants.push({ size, color, stock: 0 });
-      }
-    }
-  }
-
-  addVariant(form: any) {
-    form.variants.push({ size: '', color: this.gridColors()[0], stock: 0 });
-  }
-
-  makeCover(form: any, index: number) {
-    const [img] = form.images.splice(index, 1);
-    form.images.unshift(img);
+  makeCover(form: any, url: string) {
+    form.images.splice(form.images.indexOf(url), 1);
+    form.images.unshift(url);
   }
 
   /** Atalho do celular: escolhe/tira as fotos primeiro e já abre o cadastro com elas. */

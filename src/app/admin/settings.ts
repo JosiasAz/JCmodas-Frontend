@@ -201,9 +201,9 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
           <div class="auto">
             <app-icon name="check" [size]="20" />
             <div>
-              <b>O cliente paga o frete. O valor sai sozinho pelo CEP dele.</b>
-              <p>Na hora da compra a loja compara o destino com o endereço dela e aplica a faixa certa.
-                Você não precisa calcular nada pedido a pedido.</p>
+              <b>Frete real dos Correios e transportadoras, pelo Melhor Envio.</b>
+              <p>Na compra, o cliente vê as opções (ex.: SEDEX rápido, PAC econômico) com preço e prazo
+                e paga a que escolher. Sem o Melhor Envio configurado, a loja não aceita pedido com entrega.</p>
             </div>
           </div>
           @if (originLabel(); as origin) {
@@ -211,37 +211,34 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
           } @else {
             <p class="note small">Preencha o CEP da loja no endereço acima para o sistema saber de onde o pedido sai.</p>
           }
-          <div class="rates">
-            <label class="field">
-              <span>Na cidade da loja</span>
-              <div class="affix">
-                <span class="unit pre">R$</span>
-                <input class="input pad-pre" type="number" inputmode="decimal" step="0.01" min="0" name="fee" [(ngModel)]="f.shipping_fee" />
-              </div>
-            </label>
-            <label class="field">
-              <span>No mesmo estado</span>
-              <div class="affix">
-                <span class="unit pre">R$</span>
-                <input class="input pad-pre" type="number" inputmode="decimal" step="0.01" min="0" name="stateFee" [(ngModel)]="f.shipping_state_fee" />
-              </div>
-            </label>
-            <label class="field">
-              <span>Outros estados</span>
-              <div class="affix">
-                <span class="unit pre">R$</span>
-                <input class="input pad-pre" type="number" inputmode="decimal" step="0.01" min="0" name="otherFee" [(ngModel)]="f.shipping_other_fee" />
-              </div>
-            </label>
-          </div>
-          <p class="muted small">Esses valores entram no total do pedido. 0 = grátis nessa faixa.</p>
           <label class="field">
-            <span>Frete grátis em compras acima de</span>
+            <span>Token do Melhor Envio
+              @if (f.has_melhor_envio_token) { <b class="ok-tag">configurado</b> } @else { <b class="warn-tag">falta configurar</b> }
+            </span>
+            <input class="input" type="password" name="meToken" autocomplete="off" [(ngModel)]="f.melhor_envio_token"
+              [placeholder]="f.has_melhor_envio_token ? 'Deixe vazio para manter o token salvo' : 'Cole aqui o token'" />
+            <small>No melhorenvio.com.br: Integrações → Permissões de acesso → Gerar novo token (permissão “Cotação de fretes”).</small>
+          </label>
+          <label class="check"><input type="checkbox" name="meSandbox" [(ngModel)]="f.melhor_envio_sandbox" />
+            Modo de teste (token criado no sandbox.melhorenvio.com.br)</label>
+          <p class="small"><b>Embalagem de 1 peça</b> (o Melhor Envio junta as peças do pedido):</p>
+          <div class="rates">
+            <label class="field"><span>Largura (cm)</span>
+              <input class="input" type="number" inputmode="numeric" min="1" name="pkgW" [(ngModel)]="f.package_width_cm" /></label>
+            <label class="field"><span>Altura (cm)</span>
+              <input class="input" type="number" inputmode="numeric" min="1" name="pkgH" [(ngModel)]="f.package_height_cm" /></label>
+            <label class="field"><span>Comprimento (cm)</span>
+              <input class="input" type="number" inputmode="numeric" min="1" name="pkgL" [(ngModel)]="f.package_length_cm" /></label>
+            <label class="field"><span>Peso (gramas)</span>
+              <input class="input" type="number" inputmode="numeric" min="10" name="pkgG" [(ngModel)]="f.package_weight_g" /></label>
+          </div>
+          <label class="field">
+            <span>Frete grátis (só na entrega mais barata) acima de</span>
             <div class="affix">
               <span class="unit pre">R$</span>
               <input class="input pad-pre" type="number" inputmode="decimal" step="0.01" min="0" name="free" [(ngModel)]="f.free_shipping_min" />
             </div>
-            <small>0 = sem frete grátis. Abaixo desse valor o cliente continua pagando a entrega.</small>
+            <small>0 = sem frete grátis. Quem quiser receber mais rápido paga a diferença, como no Mercado Livre.</small>
           </label>
           <label class="check"><input type="checkbox" name="pickup" [(ngModel)]="f.pickup_enabled" /> Permitir retirada na loja (grátis)</label>
         </section>
@@ -382,8 +379,11 @@ const RETENTION_MONTHS = 12; // mesmo prazo da limpeza automática da API (servi
       > span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
       .input { padding-left: 32px; } }
     .mono { font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
-    .rates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 14px 0 8px;
-      @media (max-width: 720px) { grid-template-columns: 1fr; } }
+    .rates { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 8px 0 14px;
+      @media (max-width: 720px) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .ok-tag, .warn-tag { margin-left: 6px; font-size: .75rem; padding: 1px 8px; border-radius: 999px; }
+    .ok-tag { background: #e6f4ea; color: #1e6b34; }
+    .warn-tag { background: #fdecea; color: #a52a1f; }
 
     .cep-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
       .field { flex: 0 1 180px; } .cep-status { padding-top: 8px; } a { text-decoration: underline; } }
@@ -460,10 +460,7 @@ export class Settings {
   private load(s: StoreSettings) {
     s.cnpj = formatCnpj(s.cnpj);
     s.pix_key = formatPixKey(s.pix_key);
-    if (!s.shipping_state_fee && !s.shipping_other_fee && s.shipping_fee > 0) {
-      s.shipping_state_fee = Math.round((s.shipping_fee + 10) * 100) / 100;
-      s.shipping_other_fee = Math.round(Math.max(s.shipping_fee + 22, 29.9) * 100) / 100;
-    }
+    s.melhor_envio_token = '';
     this.form.set(s);
     this.whatsappText.set(formatWhatsapp(s.whatsapp));
     this.week.set(parseHours(s.opening_hours));

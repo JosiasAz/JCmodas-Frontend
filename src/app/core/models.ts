@@ -159,10 +159,16 @@ export interface StoreSettings {
   email: string;
   address: string;
   opening_hours: string;
-  shipping_fee: number;
-  shipping_state_fee: number;
-  shipping_other_fee: number;
+  /** acima disso, a entrega mais barata sai grátis */
   free_shipping_min: number;
+  // só no painel: frete pelo Melhor Envio (o token nunca volta da API; enviar vazio mantém o salvo)
+  melhor_envio_token?: string;
+  has_melhor_envio_token?: boolean;
+  melhor_envio_sandbox?: boolean;
+  package_width_cm?: number;
+  package_height_cm?: number;
+  package_length_cm?: number;
+  package_weight_g?: number;
   pix_discount_percent: number;
   pix_key: string;
   max_installments: number;
@@ -217,6 +223,17 @@ export interface QuoteRequest {
   cep?: string;
   city?: string;
   state?: string;
+  /** serviço de entrega escolhido (id do Melhor Envio); vazio = o mais barato */
+  shipping_service?: number | null;
+}
+
+export interface ShippingOption {
+  id: number;
+  name: string;
+  company: string;
+  price: number;
+  days: number;
+  free: boolean;
 }
 
 export interface QuoteLine {
@@ -240,6 +257,8 @@ export interface Quote {
   shipping: number;
   shipping_pending: boolean;
   shipping_note: string | null;
+  shipping_options: ShippingOption[];
+  shipping_service: number | null;
   total: number;
   coupon_code: string | null;
   coupon_message: string | null;
@@ -299,6 +318,8 @@ export interface Order {
   subtotal: number;
   discount: number;
   shipping: number;
+  /** entrega escolhida, ex.: "Correios SEDEX · chega em até 3 dias úteis" */
+  shipping_method?: string;
   total: number;
   coupon_code: string | null;
   created_at: string;

@@ -88,7 +88,7 @@
       </label>
       <label class="field">
         <span>Categoria</span>
-        <select class="input" name="category" [(ngModel)]="d.category_id">
+        <select class="input" name="category" [ngModel]="d.category_id" (ngModelChange)="d.category_id = $event; onCategory(d)">
           <option [ngValue]="null">Sem categoria</option>
           @for (c of categories(); track c.id) {
             <option [ngValue]="c.id">{{ c.name }}</option>
@@ -123,73 +123,107 @@
         <label class="check"><input type="checkbox" name="is_new" [(ngModel)]="d.is_new" /> Selo "Novo"</label>
       </div>
 
-      <h3 class="form-section">Fotos</h3>
+      <h3 class="form-section">{{ colors()[0] === null && colors().length === 1 ? 'Fotos' : 'Fotos gerais (todas as cores)' }}</h3>
       @if (photoUploads()) {
         <p class="small muted">Enviando {{ photoUploads() }} foto{{ photoUploads() > 1 ? 's' : '' }}...</p>
       }
-      <div class="images">
-        @for (img of d.images; track img; let i = $index) {
-          <div class="photo-item">
-          <div class="img" [class.cover]="i === 0">
-            <img [src]="img | img" alt="" />
-            @if (i === 0) {
-              <span class="badge tag">Capa</span>
-            }
-            <div class="tools">
-              @if (i > 0) {
-                <button type="button" (click)="makeCover(d, i)">Capa</button>
-              } @else {
-                <span></span>
-              }
-              <button type="button" (click)="d.images.splice(i, 1)" aria-label="Remover foto"><app-icon name="trash" [size]="14" /></button>
-            </div>
-          </div>
-          <!-- na loja, escolher a cor mostra esta foto -->
-          @if (colorsOf(d).length) {
-            <select class="input img-color" [name]="'imgColor' + i" [ngModel]="d.image_colors[img] ?? ''"
-              (ngModelChange)="setImageColor(d, img, $event)" aria-label="Cor desta foto">
-              <option value="">Cor: todas</option>
-              @for (c of colorsOf(d); track c) {
-                <option [value]="c">{{ c }}</option>
-              }
-            </select>
-          }
-          </div>
-        }
-      </div>
-      @if (missingPhotoColors(d).length) {
-        <p class="color-hint">Escolha embaixo de cada foto a cor dela. Assim, quando o cliente clicar na cor, a foto troca sozinha.
-          Ainda sem foto: <b>{{ missingPhotoColors(d).join(', ') }}</b>.</p>
-      }
-      <app-image-input [multiple]="true" label="Adicionar fotos" (uploaded)="d.images.push($event)" />
+      <ng-container *ngTemplateOutlet="photoList; context: { $implicit: null }" />
+      <app-image-input [multiple]="true" label="Adicionar fotos" (uploaded)="addPhoto(d, $event, null)" />
 
-      <h3 class="form-section">Tamanhos e estoque</h3>
+      <h3 class="form-section">Cores, tamanhos e estoque</h3>
+      <div class="chips" role="group" aria-label="Cores do produto">
+        @for (c of colors(); track c) {
+          @if (c !== null) {
+            <span class="chip">{{ c }}
+              <button type="button" (click)="removeColor(d, c)" [attr.aria-label]="'Remover a cor ' + c"><app-icon name="x" [size]="14" /></button>
+            </span>
+          }
+        }
+        <span class="add-color">
+          <input #newColor class="input" placeholder="Nova cor (ex.: Preta)" aria-label="Nome da nova cor"
+            (keydown.enter)="$event.preventDefault(); addColor(d, newColor)" />
+          <button type="button" class="btn sm outline" (click)="addColor(d, newColor)"><app-icon name="plus" [size]="16" /> Adicionar cor</button>
+        </span>
+      </div>
       <div class="grid-buttons">
-        <input class="input grid-color" name="gridColor" [(ngModel)]="gridColor" placeholder="Cores: Azul, Preta, Verde" />
+        <span class="small muted">Grade de tamanhos:</span>
         @for (g of grids; track g.label) {
-          <button type="button" class="btn sm outline" (click)="addGrid(d, g.sizes)">+ {{ g.label }}</button>
+          <button type="button" class="btn sm outline" (click)="useGrid(g.sizes)">+ {{ g.label }}</button>
         }
       </div>
-      <p class="color-hint">Digite as cores separadas por vírgula e clique na grade de tamanhos: cria todos os tamanhos de cada cor de uma vez.</p>
-      @if (d.variants.length) {
-        <table class="variants">
-          <thead><tr><th>Tamanho</th><th>Cor</th><th>Estoque</th><th></th></tr></thead>
-          <tbody>
-            @for (v of d.variants; track $index; let i = $index) {
-              <tr>
-                <td><input class="input" [name]="'size' + i" [(ngModel)]="v.size" required /></td>
-                <td><input class="input" [name]="'color' + i" [(ngModel)]="v.color" placeholder="-" /></td>
-                <td><input class="input" type="number" inputmode="numeric" min="0" [name]="'stock' + i" [(ngModel)]="v.stock" /></td>
-                <td><button type="button" class="icon-btn" (click)="d.variants.splice(i, 1)" aria-label="Remover"><app-icon name="trash" [size]="16" /></button></td>
-              </tr>
+
+      <div class="color-cards">
+        @for (color of colors(); track color) {
+          <section class="color-card" [attr.aria-label]="color ?? 'Sem cor'">
+            <div class="card-head">
+              @if (color === null) {
+                <h4>Sem cor</h4>
+              } @else {
+                <input class="input color-name" [value]="color" (change)="renameColor(d, color, $event)" aria-label="Nome da cor (toque para renomear)" />
+              }
+              @if (colors().length > 1 || color !== null) {
+                <button type="button" class="icon-btn" (click)="removeColor(d, color)" [attr.aria-label]="'Remover ' + (color ?? 'tamanhos sem cor')">
+                  <app-icon name="trash" [size]="16" />
+                </button>
+              }
+            </div>
+            @if (color === null) {
+              <p class="color-hint">A peça tem cores? Adicione acima e cada cor ganha suas fotos e tamanhos.</p>
+            } @else {
+              <ng-container *ngTemplateOutlet="photoList; context: { $implicit: color }" />
+              <app-image-input [multiple]="true" label="Fotos desta cor" (uploaded)="addPhoto(d, $event, color)" />
             }
-          </tbody>
-        </table>
-      }
+
+            <div class="sizes" role="group" [attr.aria-label]="'Tamanhos ' + (color ?? '')">
+              @for (size of sizeOptions(); track size) {
+                @let v = variantOf(d, color, size);
+                <div class="size" [class.on]="v">
+                  <button type="button" class="size-toggle" (click)="toggleSize(d, color, size)" [attr.aria-pressed]="!!v"
+                    [attr.aria-label]="'Tamanho ' + size + (color ? ' na cor ' + color : '')">{{ size }}</button>
+                  @if (v) {
+                    <input class="input stock" type="number" inputmode="numeric" min="0" [(ngModel)]="v.stock"
+                      [ngModelOptions]="{ standalone: true }" [attr.aria-label]="'Estoque do tamanho ' + size" />
+                  }
+                </div>
+              }
+              <span class="add-size">
+                <input #newSize class="input" placeholder="Outro" aria-label="Outro tamanho"
+                  (keydown.enter)="$event.preventDefault(); addSize(d, color, newSize)" />
+                <button type="button" class="icon-btn" (click)="addSize(d, color, newSize)" aria-label="Adicionar tamanho"><app-icon name="plus" [size]="16" /></button>
+              </span>
+            </div>
+          </section>
+        }
+      </div>
       <div class="variants-foot">
-        <button type="button" class="link small" (click)="addVariant(d)">+ Adicionar tamanho</button>
+        <span class="small muted">Toque no tamanho para marcar e digite quantas peças tem.</span>
         <span class="total-stock">Total em estoque: <b>{{ totalStock(d) }}</b></span>
       </div>
+
+      <ng-template #photoList let-color>
+        @if (photosOf(d, color); as photos) {
+          @if (photos.length) {
+            <div class="images">
+              @for (img of photos; track img) {
+                <div class="img" [class.cover]="img === d.images[0]">
+                  <img [src]="img | img" alt="" />
+                  @if (img === d.images[0]) {
+                    <span class="badge tag">Capa</span>
+                  }
+                  <div class="tools">
+                    @if (img !== d.images[0]) {
+                      <button type="button" (click)="makeCover(d, img)" aria-label="Usar como capa do produto">Capa</button>
+                    } @else {
+                      <span></span>
+                    }
+                    <button type="button" (click)="removePhoto(d, img)" aria-label="Remover foto"><app-icon name="trash" [size]="14" /></button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        }
+      </ng-template>
 
       @if (error()) {
         <p class="form-error">{{ error() }}</p>

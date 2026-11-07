@@ -68,12 +68,25 @@
                 } @else if (cepStatus() === 'error') {
                   <small class="err">CEP não encontrado. Preencha o endereço manualmente.</small>
                 } @else if (quote()?.shipping_pending) {
-                  <small>O frete aparece no resumo assim que o CEP estiver completo.</small>
-                } @else if (quote(); as q) {
-                  <small class="ship-ok">{{ q.shipping ? (q.shipping | money) + ' · ' + (q.shipping_note || 'entrega') : 'Frete grátis' }} — você paga na finalização</small>
+                  <small>{{ quote()!.shipping_note }}</small>
                 }
               </label>
             </div>
+            @if (quote()?.shipping_options?.length) {
+              <fieldset class="ship-options">
+                <legend>Escolha a entrega</legend>
+                @for (o of quote()!.shipping_options; track o.id) {
+                  <label class="ship-option" [class.on]="quote()!.shipping_service === o.id">
+                    <input type="radio" name="shipping" [value]="o.id" [checked]="quote()!.shipping_service === o.id"
+                      (change)="shippingService.set(o.id)" />
+                    <span class="ship-name">{{ o.company }} {{ o.name }}
+                      <small>chega em até {{ o.days }} {{ o.days === 1 ? 'dia útil' : 'dias úteis' }}</small>
+                    </span>
+                    <strong>{{ o.free ? 'Grátis' : (o.price | money) }}</strong>
+                  </label>
+                }
+              </fieldset>
+            }
             <div class="row" style="--cols: 3">
               <label class="field span-2">
                 <span>Rua / Avenida</span>
