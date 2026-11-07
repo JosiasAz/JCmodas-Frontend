@@ -38,6 +38,9 @@ import { ImageCropper } from './image-cropper';
           <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden (change)="upload($event)" [multiple]="multiple()" />
           <app-icon name="upload" [size]="16" /> {{ label() }}
         </label>
+        <button type="button" class="btn outline sm" (click)="openSaved()">
+          <app-icon name="grid" [size]="16" /> Fotos salvas
+        </button>
         @if (pending()) {
           <span class="sending small muted">Enviando {{ pending() }} foto{{ pending() > 1 ? 's' : '' }}...</span>
         }
@@ -46,6 +49,38 @@ import { ImageCropper } from './image-cropper';
         }
       </div>
     </div>
+    @if (saved(); as photos) {
+      <div class="modal-backdrop saved-backdrop" (click)="saved.set(null)">
+        <div class="modal" role="dialog" aria-label="Fotos salvas" (click)="$event.stopPropagation()">
+          <div class="modal-head">
+            <h2>Fotos salvas</h2>
+            <button type="button" class="icon-btn" (click)="saved.set(null)" aria-label="Fechar"><app-icon name="x" /></button>
+          </div>
+          <p class="small muted">Fotos que já estão guardadas no banco. {{ multiple() ? 'Toque nas que quiser usar.' : 'Toque na foto para usar.' }}</p>
+          @if (!photos.length) {
+            <p class="muted">Nenhuma foto salva ainda.</p>
+          }
+          <div class="saved-grid">
+            @for (p of photos; track p.url) {
+              <button type="button" class="saved-item" [class.on]="chosen().includes(p.url)" (click)="pick(p.url)"
+                [attr.aria-pressed]="multiple() ? chosen().includes(p.url) : null">
+                <img [src]="p.url | img: 400" alt="" loading="lazy" />
+                @if (p.in_use) { <span class="tag">em uso</span> }
+                @if (chosen().includes(p.url)) { <span class="check"><app-icon name="check" [size]="14" /></span> }
+              </button>
+            }
+          </div>
+          @if (multiple()) {
+            <div class="modal-foot">
+              <button type="button" class="btn ghost" (click)="saved.set(null)">Cancelar</button>
+              <button type="button" class="btn" [disabled]="!chosen().length" (click)="useChosen()">
+                Usar {{ chosen().length }} foto{{ chosen().length === 1 ? '' : 's' }}
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
     @if (cropping(); as source) {
       <app-image-cropper [source]="source" [aspect]="aspect()!" [round]="round()"
         (done)="cropping.set(null); send($event)" (cancel)="cropping.set(null)" />
@@ -61,6 +96,15 @@ import { ImageCropper } from './image-cropper';
     .actions { flex: 1; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; min-width: 220px;
       .input { flex: 1; min-width: 200px; min-height: 38px; font-size: .85rem; } label { cursor: pointer; } }
     .camera { display: none; }
+    .saved-backdrop { z-index: 110; } /* abre por cima do formulário do produto */
+    .saved-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin: 14px 0; }
+    .saved-item { position: relative; aspect-ratio: 84 / 100; padding: 0; border: 2px solid transparent; border-radius: 8px;
+      overflow: hidden; background: var(--sand); cursor: pointer;
+      img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      &.on { border-color: var(--ink, #111); }
+      .tag { position: absolute; left: 4px; bottom: 4px; font-size: .7rem; padding: 1px 6px; border-radius: 6px; background: #fff; }
+      .check { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; display: grid;
+        place-items: center; background: var(--ink, #111); color: #fff; } }
     @media (pointer: coarse) {
       .camera { display: inline-flex; }
       .actions label { flex: 1; min-height: 44px; }
@@ -84,6 +128,31 @@ export class ImageInput {
   protected pending = signal(0);
   /** foto aberta no recorte */
   protected cropping = signal<Blob | null>(null);
+  /** galeria de fotos já salvas no banco (null = fechada) */
+  protected saved = signal<{ url: string; in_use: boolean }[] | null>(null);
+  protected chosen = signal<string[]>([]);
+
+  openSaved() {
+    this.chosen.set([]);
+    this.api.savedUploads().subscribe({
+      next: (photos) => this.saved.set(photos),
+      error: (err) => this.toast.error(errorMessage(err)),
+    });
+  }
+
+  pick(url: string) {
+    if (!this.multiple()) {
+      this.saved.set(null);
+      this.value.set(url);
+      return;
+    }
+    this.chosen.update((list) => (list.includes(url) ? list.filter((u) => u !== url) : [...list, url]));
+  }
+
+  useChosen() {
+    this.chosen().forEach((url) => this.uploaded.emit(url));
+    this.saved.set(null);
+  }
 
   upload(event: Event) {
     const files = Array.from((event.target as HTMLInputElement).files ?? []);

@@ -49,6 +49,11 @@ export class AdminApiService {
     return this.http.delete<void>(`${this.base}/${resource}/${id}`);
   }
 
+  /** fotos já salvas no banco (mais novas primeiro), para reaproveitar sem enviar de novo */
+  savedUploads() {
+    return this.http.get<{ url: string; created_at: string; in_use: boolean }[]>(`${this.base}/uploads`);
+  }
+
   upload(file: File) {
     return from(shrinkImage(file)).pipe(
       switchMap((image) => {
