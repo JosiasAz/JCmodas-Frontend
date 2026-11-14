@@ -59,7 +59,18 @@ const NEXT: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>>
               <td class="cell-status"><span class="status" [class]="'status ' + o.status">{{ statusLabel[o.status] }}</span></td>
             </tr>
           } @empty {
-            <tr><td colspan="7" class="empty">{{ page() ? 'Nenhum pedido encontrado.' : 'Carregando...' }}</td></tr>
+            <tr><td colspan="7" class="empty-state">
+              @if (!page()) {
+                <span class="muted">Carregando...</span>
+              } @else if (search() || status()) {
+                <b>Nenhum pedido com esse filtro</b>
+                <span class="muted">Tente outra busca ou volte para "Todos".</span>
+              } @else {
+                <span class="empty-icon"><app-icon name="bag" [size]="24" /></span>
+                <b>Nenhum pedido ainda</b>
+                <span class="muted">Quando um cliente comprar na loja, o pedido aparece aqui.</span>
+              }
+            </td></tr>
           }
         </tbody>
       </table>
@@ -125,7 +136,14 @@ const NEXT: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>>
   styles: `
     .pay-check { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0 0; padding: 12px 14px; border-radius: var(--radius-sm);
       background: var(--warn-soft); color: #6b4106; font-size: .88rem; }
-    .tabs { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 12px; border-bottom: 1px solid var(--line);
+    .toolbar .input { width: 100%; max-width: 380px; }
+    td.empty-state { padding: 48px 20px; text-align: center;
+      b, span { display: block; } b { margin-bottom: 4px; color: var(--ink); } }
+    .empty-icon { display: inline-grid !important; place-items: center; width: 52px; height: 52px; margin-bottom: 12px;
+      border-radius: 50%; background: var(--sand); color: var(--ink); }
+    /* a sublinha da aba ativa passava 1px da caixa e o navegador mostrava setas de rolagem */
+    .tabs { display: flex; gap: 4px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; margin-bottom: 14px;
+      border-bottom: 1px solid var(--line); &::-webkit-scrollbar { display: none; }
       button { padding: 10px 14px; border: 0; background: none; font-weight: 500; color: var(--muted); cursor: pointer;
         border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
         &.on { color: var(--ink); border-color: var(--ink); font-weight: 600; } } }

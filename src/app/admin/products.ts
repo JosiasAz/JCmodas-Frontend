@@ -24,9 +24,12 @@ const GRIDS = [
   imports: [FormsModule, NgTemplateOutlet, RouterLink, RouterLinkActive, Icon, MoneyPipe, ImageInput, Pager, ImgPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './products.html',
+  // clicar fora fecha o menu "Planilha"
+  host: { '(document:click)': 'closeSheetMenu($event)' },
   styles: `
     .name { font-weight: 600; display: block; }
     .stock-zero { color: var(--sale); font-weight: 600; }
+    .no-photo { display: inline-grid; place-items: center; background: var(--sand); color: var(--muted); }
     .images { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
     .img { position: relative; width: 84px; height: 104px; border-radius: 8px; overflow: hidden; background: var(--sand);
       border: 2px solid transparent;
@@ -37,7 +40,19 @@ const GRIDS = [
       button { border: 0; background: none; cursor: pointer; font-size: .7rem; font-weight: 600; padding: 2px 4px; }
       .tag { position: absolute; top: 4px; left: 4px; font-size: .62rem; }
     }
-    .head-actions { display: flex; gap: 8px; flex-wrap: wrap; label { cursor: pointer; } }
+    .head-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end;
+      > * { flex: none; } label { cursor: pointer; } }
+    .sheet-menu { position: relative;
+      summary { list-style: none; &::-webkit-details-marker { display: none; } }
+      &[open] summary { background: var(--sand); color: var(--ink); }
+      .menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: 290px; padding: 6px;
+        background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 32px rgb(0 0 0 / .12); }
+      .item { display: flex; gap: 12px; align-items: flex-start; width: 100%; padding: 10px 12px; border: 0; border-radius: 10px;
+        background: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer;
+        &:hover { background: var(--sand); }
+        app-icon { margin-top: 2px; flex: none; }
+        span { display: grid; gap: 2px; }
+        small { color: var(--muted); font-size: .8rem; } } }
     .fab { display: none; }
     .grid-buttons { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0; }
     .color-hint { font-size: .82rem; color: var(--muted); margin: 0 0 10px; }
@@ -69,7 +84,7 @@ const GRIDS = [
     @media (max-width: 720px) {
       :host { display: block; padding-bottom: 56px; } /* o último cartão não fica atrás do botão da câmera */
       .page-head > div:first-child { flex: 1 1 160px; }
-      .head-actions .photo, .head-actions .sheet { display: none; } /* planilha é trabalho de computador */
+      .head-actions .photo, .head-actions .xls { display: none; } /* planilha é trabalho de computador */
       .head-actions .new { min-height: 44px; padding: 0 14px; font-size: .88rem; background: transparent; color: var(--ink); }
       .fab { position: fixed; z-index: 50; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom));
         display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; cursor: pointer;
@@ -352,7 +367,7 @@ export class Products extends CrudPage<Product> {
         this.importing.set(false);
         this.load();
         const lines = [
-          created.length ? `${created.length} produto(s) criado(s). Eles estão escondidos da loja: coloque as fotos e clique no olho para mostrar.` : '',
+          created.length ? `${created.length} produto(s) criado(s). Eles estão escondidos da loja: coloque as fotos e toque em "Escondido" para mostrar.` : '',
           skipped.length ? `${skipped.length} já existiam e ficaram como estavam: ${skipped.slice(0, 5).join(', ')}${skipped.length > 5 ? '...' : ''}.` : '',
           errors.length ? `Não entraram (corrija e importe de novo):\n• ${errors.slice(0, 10).join('\n• ')}${errors.length > 10 ? `\n...e mais ${errors.length - 10}` : ''}` : '',
         ].filter(Boolean);
@@ -368,6 +383,11 @@ export class Products extends CrudPage<Product> {
         this.toast.error(errorMessage(err));
       },
     });
+  }
+
+  closeSheetMenu(event: Event) {
+    const menu = document.querySelector<HTMLDetailsElement>('details.sheet-menu');
+    if (menu?.open && !menu.contains(event.target as Node)) menu.open = false;
   }
 
   downloadTemplate() {

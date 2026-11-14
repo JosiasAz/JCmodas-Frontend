@@ -8,14 +8,23 @@
     <p class="muted">Cadastre peças, fotos, preços e estoque por tamanho.</p>
   </div>
   <div class="head-actions">
-    <button class="btn ghost sheet" type="button" (click)="downloadTemplate()" title="Planilha de exemplo para preencher no Excel">
-      <app-icon name="download" [size]="18" /> Modelo da planilha
-    </button>
-    <label class="btn outline sheet" [class.disabled]="importing()">
-      <input type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-        hidden [disabled]="importing()" (change)="importSheet($event)" />
-      <app-icon name="upload" [size]="18" /> {{ importing() ? 'Importando...' : 'Importar planilha' }}
-    </label>
+    <details class="sheet-menu xls" #sheetMenu>
+      <summary class="btn outline" [attr.aria-busy]="importing()">
+        <app-icon name="upload" [size]="18" /> {{ importing() ? 'Importando...' : 'Planilha' }}
+      </summary>
+      <div class="menu" role="menu">
+        <label class="item" role="menuitem">
+          <input type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+            hidden [disabled]="importing()" (change)="sheetMenu.open = false; importSheet($event)" />
+          <app-icon name="upload" [size]="18" />
+          <span><b>Importar planilha</b><small>Excel (.xlsx) ou .csv, uma linha por tamanho</small></span>
+        </label>
+        <button type="button" class="item" role="menuitem" (click)="sheetMenu.open = false; downloadTemplate()">
+          <app-icon name="download" [size]="18" />
+          <span><b>Baixar modelo</b><small>Exemplo pronto para preencher</small></span>
+        </button>
+      </div>
+    </details>
     <label class="btn outline photo">
       <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden (change)="startWithPhotos($event)" />
       <app-icon name="camera" [size]="18" /> Cadastrar com fotos
@@ -48,7 +57,13 @@
     <tbody>
       @for (p of pageRows(); track p.id) {
         <tr>
-          <td class="cell-thumb"><img class="thumb" [src]="p.images[0] | img" alt="" /></td>
+          <td class="cell-thumb">
+            @if (p.images[0]) {
+              <img class="thumb" [src]="p.images[0] | img" alt="" />
+            } @else {
+              <span class="thumb no-photo" title="Sem foto"><app-icon name="camera" [size]="18" /></span>
+            }
+          </td>
           <td class="cell-main">
             <span class="name">{{ p.name }}</span>
             <span class="muted small">{{ p.category_name || 'Sem categoria' }}</span>
@@ -131,7 +146,7 @@
         <label class="check"><input type="checkbox" name="is_new" [(ngModel)]="d.is_new" /> Selo "Novo"</label>
       </div>
 
-      <h3 class="form-section">{{ colors()[0] === null && colors().length === 1 ? 'Fotos' : 'Fotos gerais (todas as cores)' }}</h3>
+      <h3 class="form-section">{{ colors()[0] === null && colors().length === 1 ? 'Fotos' : 'Fotos para todas as cores (opcional)' }}</h3>
       @if (photoUploads()) {
         <p class="small muted">Enviando {{ photoUploads() }} foto{{ photoUploads() > 1 ? 's' : '' }}...</p>
       }
@@ -148,7 +163,7 @@
           }
         }
         <span class="add-color">
-          <input #newColor class="input" placeholder="Nova cor (ex.: Preta)" aria-label="Nome da nova cor"
+          <input #newColor class="input" placeholder="Outra cor" aria-label="Nome da nova cor"
             (keydown.enter)="$event.preventDefault(); addColor(d, newColor)" />
           <button type="button" class="btn sm outline" (click)="addColor(d, newColor)"><app-icon name="plus" [size]="16" /> Adicionar cor</button>
         </span>
