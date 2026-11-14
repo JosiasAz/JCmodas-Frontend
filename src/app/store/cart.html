@@ -86,12 +86,11 @@
           } @else if (cepStatus() === 'error') {
             <small class="warn">CEP não encontrado. Você pode informar de novo no checkout.</small>
           } @else if (q.shipping_options.length) {
-            <small class="ok">{{ dest.city() ? dest.city() + '/' + dest.state() + ' — ' : '' }}entrega a partir de
-              {{ q.shipping_options[0].free ? 'grátis' : (q.shipping_options[0].price | money) }}. Você escolhe a opção no checkout.</small>
+            <small class="ok">{{ q.shipping_options[0].free ? 'Frete grátis' : 'Frete' }}{{ dest.city() ? ' para ' + dest.city() + '/' + dest.state() : '' }}{{ q.shipping_options[0].free ? '' : ' a partir de ' + (q.shipping_options[0].price | money) }}</small>
           } @else if (q.shipping_pending && q.shipping_note && dest.ready()) {
             <small class="warn">{{ q.shipping_note }}</small>
           } @else if (dest.city()) {
-            <small class="ok">{{ dest.city() }}/{{ dest.state() }} — o cliente paga a entrega</small>
+            <small class="ok">Frete para {{ dest.city() }}/{{ dest.state() }} calculado no checkout</small>
           } @else {
             <small>Digite o CEP. O valor entra no total do pedido.</small>
           }
