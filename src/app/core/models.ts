@@ -323,6 +323,10 @@ export interface Order {
   shipping: number;
   /** entrega escolhida, ex.: "Correios SEDEX · chega em até 3 dias úteis" */
   shipping_method?: string;
+  /** código de rastreio da etiqueta do Melhor Envio */
+  tracking_code?: string | null;
+  /** a etiqueta já foi criada no Melhor Envio (o botão reimprime) */
+  label_started?: boolean;
   total: number;
   coupon_code: string | null;
   created_at: string;

@@ -31,7 +31,8 @@ const TOPICS: Topic[] = [
     steps: [
       'Em <b>Contato</b>, cole o <b>WhatsApp</b> do jeito que vier (com +55, espaços ou traços, o painel arruma). É por ele que o cliente tira dúvidas e manda o comprovante.',
       'Preencha o <b>CEP da loja</b>: o endereço completa sozinho. O frete usa esse CEP para saber de onde o pedido sai.',
-      'Em <b>Entrega</b>, coloque o valor do frete <b>na cidade da loja</b>, <b>no mesmo estado</b> e <b>em outros estados</b>. O cliente vê o valor certo assim que digita o CEP dele.',
+      'Em <b>Entrega</b>, conecte o <b>Melhor Envio</b> (o passo a passo aparece na tela) e preencha as medidas e o peso de 1 peça embalada. O cliente vê o frete real, com prazo, assim que digita o CEP dele.',
+      'Em <b>Dados da empresa</b>, preencha a razão social e o CNPJ: eles vão como remetente na etiqueta de envio.',
       'Se quiser, defina <b>frete grátis acima de</b> um valor (0 = sem frete grátis). Isso aparece no topo da loja como vantagem.',
       'Em <b>Pagamento</b>, cole a <b>chave Pix</b> e escolha o <b>desconto no Pix</b> e as <b>parcelas sem juros</b> no cartão.',
       'Em <b>Pedidos e estoque</b>, escolha em quantas horas um pedido <b>não pago</b> é cancelado sozinho. O estoque reservado volta para a loja.',
@@ -40,7 +41,7 @@ const TOPICS: Topic[] = [
     example: {
       title: 'Exemplo para uma loja em Manaus',
       lines: [
-        'Na cidade da loja: R$ 10,00 · No mesmo estado: R$ 25,00 · Outros estados: R$ 45,00',
+        'Embalagem de 1 peça: 20 × 5 × 28 cm, 400 g',
         'Frete grátis acima de R$ 299,00',
         'Desconto no Pix: 5% · Parcelas sem juros: 6x',
         'Cancelar pedido não pago depois de: 24 horas',
@@ -286,6 +287,8 @@ const TOPICS: Topic[] = [
       'Pedido novo chega como <b>Novo</b>. Abra e confira os itens, o endereço e a forma de pagamento.',
       '<b>Antes de confirmar o pagamento</b>, confira a entrada do valor no extrato ou no app do banco. Comprovante enviado por mensagem pode ser falso.',
       'Clique em <b>Confirmar pagamento</b> → <b>Começar a separar</b> → <b>Marcar como enviado</b> (ou <b>Pronto para retirada</b>) → <b>Marcar como entregue</b>.',
+      'Pedido com entrega: depois de confirmar o pagamento, clique em <b>Gerar etiqueta</b>. O painel compra a etiqueta no Melhor Envio com o saldo da <b>Melhor Carteira</b> e abre o PDF para imprimir. Clicar de novo só reimprime, nunca cobra duas vezes.',
+      'Mande o <b>código de rastreio</b> (aparece no pedido) para o cliente pelo botão <b>Conversar</b>.',
       'Use <b>Conversar</b> para abrir o WhatsApp do cliente com uma mensagem pronta sobre o pedido.',
       'Se precisar, clique em <b>Cancelar pedido</b>: as peças voltam para o estoque.',
       'Pedidos cancelados podem ser apagados do histórico: abra o pedido e clique em <b>Remover do histórico</b>. Só administradores podem fazer isso, e não dá para desfazer.',

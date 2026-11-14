@@ -151,13 +151,52 @@ export const adminGuard: CanActivateFn = (_route, state) => {
   return true;
 };
 
+// nome dos campos da API como aparecem no painel
+const FIELD_LABELS: Record<string, string> = {
+  name: 'Nome', price: 'Preço de venda', compare_at_price: 'Preço "de"', description: 'Descrição',
+  stock: 'Estoque', size: 'Tamanho', color: 'Cor', category_id: 'Categoria', images: 'Fotos',
+  email: 'E-mail', password: 'Senha', phone: 'Telefone', whatsapp: 'WhatsApp', code: 'Código',
+  value: 'Valor', min_total: 'Valor mínimo', max_uses: 'Limite de usos', title: 'Título',
+  starts_at: 'Início', ends_at: 'Fim', cep: 'CEP', address: 'Endereço', customer_name: 'Nome',
+};
+
+/** Erro de validação do servidor (FastAPI/Pydantic) em português simples. */
+function fieldError(d: { loc?: (string | number)[]; type?: string; msg?: string; input?: unknown; ctx?: any }): string {
+  const key = [...(d.loc ?? [])].reverse().find((p) => typeof p === 'string' && p !== 'body') as string | undefined;
+  const field = (key && FIELD_LABELS[key]) || 'Um campo';
+  const empty = d.input === null || d.input === undefined || d.input === '';
+  switch (d.type) {
+    case 'missing':
+      return `${field}: preencha este campo`;
+    case 'string_too_short':
+      return empty ? `${field}: preencha este campo` : `${field}: escreva pelo menos ${d.ctx?.min_length} letras`;
+    case 'string_too_long':
+      return `${field}: no máximo ${d.ctx?.max_length} letras`;
+    case 'float_type': case 'float_parsing': case 'int_type': case 'int_parsing': case 'decimal_parsing':
+      return empty ? `${field}: preencha este campo` : `${field}: digite só números`;
+    case 'greater_than':
+      return `${field}: precisa ser maior que ${d.ctx?.gt}`;
+    case 'greater_than_equal':
+      return `${field}: não pode ser menor que ${d.ctx?.ge}`;
+    case 'less_than_equal':
+      return `${field}: no máximo ${d.ctx?.le}`;
+    case 'too_long':
+      return `${field}: são muitos itens (máximo ${d.ctx?.max_length})`;
+    case 'value_error':
+      if (/valid email/i.test(String(d.msg))) return `${field}: e-mail inválido`;
+      return String(d.msg).replace(/^Value error, /, ''); // mensagens nossas, já em português
+    default:
+      return `${field}: confira o que foi digitado`;
+  }
+}
+
 /** Mensagem amigável a partir de um erro da API. */
 export function errorMessage(err: unknown): string {
   const e = err as HttpErrorResponse;
   const detail = e?.error?.detail;
   if (typeof detail === 'string') return detail;
   if (Array.isArray(detail) && detail.length) {
-    return detail.map((d) => String(d.msg).replace(/^Value error, /, '')).join(' · ');
+    return [...new Set(detail.map(fieldError))].join(' · ');
   }
   if (e?.status === 0) return 'Sem conexão com o servidor. Tente novamente.';
   return 'Algo deu errado. Tente novamente.';

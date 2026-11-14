@@ -68,6 +68,11 @@ export class AdminApiService {
     return this.http.delete<void>(`${this.base}/uploads/${url.split('/').pop()}`);
   }
 
+  /** compra (se ainda não comprou) e gera a etiqueta do Melhor Envio; devolve o link do PDF */
+  makeLabel(orderId: number) {
+    return this.http.post<{ url: string; tracking_code: string | null }>(`${this.base}/orders/${orderId}/label`, {});
+  }
+
   importProducts(file: File) {
     const form = new FormData();
     form.append('file', file);

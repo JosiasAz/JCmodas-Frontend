@@ -104,6 +104,26 @@ const NEXT: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>>
             <p class="ship-method"><app-icon name="truck" [size]="16" /> <b>Enviar por:</b> {{ o.shipping_method }}
               ({{ o.shipping ? (o.shipping | money) : 'frete grátis' }})</p>
           }
+          @if (o.delivery_method === 'entrega' && o.status !== 'cancelado' && o.status !== 'entregue') {
+            <div class="label-box">
+              @if (o.status === 'novo') {
+                <span class="muted small">A etiqueta fica liberada depois de confirmar o pagamento.</span>
+              } @else {
+                <div>
+                  <b>Etiqueta do Melhor Envio</b>
+                  <span class="muted small">
+                    @if (o.tracking_code) { Rastreio: <b class="mono">{{ o.tracking_code }}</b> }
+                    @else if (o.label_started) { Já criada. Clique para imprimir de novo. }
+                    @else { Compra com o saldo da Melhor Carteira e abre o PDF para imprimir. }
+                  </span>
+                </div>
+                <button class="btn sm" type="button" (click)="makeLabel(o)" [disabled]="labelBusy()">
+                  <app-icon name="truck" [size]="16" />
+                  {{ labelBusy() ? 'Gerando...' : o.label_started ? 'Imprimir etiqueta' : 'Gerar etiqueta' }}
+                </button>
+              }
+            </div>
+          }
 
           <app-order-view [order]="o" />
 
@@ -153,6 +173,9 @@ const NEXT: Partial<Record<OrderStatus, { status: OrderStatus; label: string }>>
     .notes { padding: 12px 14px; background: var(--warn-soft); border-radius: var(--radius-sm); font-size: .9rem; }
     .status-select { width: auto; min-height: 46px; }
     .ship-method { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; font-size: .9rem; }
+    .label-box { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+      > div { display: grid; gap: 2px; } .mono { font-family: ui-monospace, monospace; letter-spacing: .02em; } }
   `,
 })
 export class Orders {
@@ -173,6 +196,7 @@ export class Orders {
   protected pageNumber = signal(1);
   protected page = signal<OrderPage | null>(null);
   protected selected = signal<Order | null>(null);
+  protected labelBusy = signal(false);
 
   private query = computed(() => ({
     ...(this.status() ? { status: this.status()! } : {}),
@@ -192,6 +216,30 @@ export class Orders {
     this.status.set(status);
     this.pageNumber.set(1);
     this.router.navigate([], { queryParams: { status } });
+  }
+
+  /** Compra/gera a etiqueta no Melhor Envio e abre o PDF numa aba nova. */
+  makeLabel(o: Order) {
+    // a aba abre já no clique: aberta depois da resposta, o navegador bloquearia como pop-up
+    const tab = window.open('', '_blank');
+    this.labelBusy.set(true);
+    this.api.makeLabel(o.id).subscribe({
+      next: ({ url, tracking_code }) => {
+        this.labelBusy.set(false);
+        if (tab) tab.location.href = url;
+        else window.location.href = url;
+        const done = { ...o, label_started: true, tracking_code };
+        this.selected.set(done);
+        this.page.update((p) => p && { ...p, items: p.items.map((x) => (x.id === o.id ? done : x)) });
+        this.toast.show(o.label_started ? 'Etiqueta aberta para imprimir.' : 'Etiqueta gerada! Cole no pacote e leve na agência.');
+      },
+      error: (err) => {
+        this.labelBusy.set(false);
+        tab?.close();
+        // se o envio foi criado antes do erro (ex.: sem saldo), o servidor guardou: o próximo clique continua dele
+        this.toast.error(errorMessage(err));
+      },
+    });
   }
 
   itemCount(o: Order) {
