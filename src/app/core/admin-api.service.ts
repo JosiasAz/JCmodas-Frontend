@@ -68,6 +68,16 @@ export class AdminApiService {
     return this.http.delete<void>(`${this.base}/uploads/${url.split('/').pop()}`);
   }
 
+  importProducts(file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<{ created: string[]; skipped: string[]; errors: string[] }>(`${this.base}/products/import`, form);
+  }
+
+  importTemplate() {
+    return this.http.get(`${this.base}/products/import-template`, { responseType: 'blob' });
+  }
+
   upload(file: File) {
     return from(shrinkImage(file)).pipe(
       switchMap((image) => {

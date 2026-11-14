@@ -8,6 +8,14 @@
     <p class="muted">Cadastre peças, fotos, preços e estoque por tamanho.</p>
   </div>
   <div class="head-actions">
+    <button class="btn ghost sheet" type="button" (click)="downloadTemplate()" title="Planilha de exemplo para preencher no Excel">
+      <app-icon name="download" [size]="18" /> Modelo da planilha
+    </button>
+    <label class="btn outline sheet" [class.disabled]="importing()">
+      <input type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+        hidden [disabled]="importing()" (change)="importSheet($event)" />
+      <app-icon name="upload" [size]="18" /> {{ importing() ? 'Importando...' : 'Importar planilha' }}
+    </label>
     <label class="btn outline photo">
       <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden (change)="startWithPhotos($event)" />
       <app-icon name="camera" [size]="18" /> Cadastrar com fotos

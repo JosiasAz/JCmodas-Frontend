@@ -8,6 +8,8 @@ export interface ConfirmOptions {
   cancelLabel?: string;
   /** ação destrutiva: botão vermelho */
   danger?: boolean;
+  /** só avisa: mostra um botão só (o de confirmar) */
+  alert?: boolean;
 }
 
 interface Pending extends ConfirmOptions {

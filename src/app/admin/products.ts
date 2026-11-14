@@ -10,6 +10,7 @@ import { CrudPage } from './crud-page';
 import { ImageInput } from './image-input';
 import { Pager } from './pager';
 import { ImgPipe } from '../shared/img.pipe';
+import { detectColor } from '../core/color-detect';
 
 const GRIDS = [
   { label: 'P ao GG', sizes: ['P', 'M', 'G', 'GG'] },
@@ -68,7 +69,7 @@ const GRIDS = [
     @media (max-width: 720px) {
       :host { display: block; padding-bottom: 56px; } /* o último cartão não fica atrás do botão da câmera */
       .page-head > div:first-child { flex: 1 1 160px; }
-      .head-actions .photo { display: none; }
+      .head-actions .photo, .head-actions .sheet { display: none; } /* planilha é trabalho de computador */
       .head-actions .new { min-height: 44px; padding: 0 14px; font-size: .88rem; background: transparent; color: var(--ink); }
       .fab { position: fixed; z-index: 50; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom));
         display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; cursor: pointer;
@@ -93,6 +94,7 @@ export class Products extends CrudPage<Product> {
   protected categoryFilter = signal<number | null>(null);
   /** Fotos do atalho "Cadastrar com fotos" ainda subindo. */
   protected photoUploads = signal(0);
+  protected importing = signal(false);
 
   /** ?editar=ID abre o produto direto (link do alerta de estoque baixo) */
   readonly editar = input<string>();
@@ -304,11 +306,20 @@ export class Products extends CrudPage<Product> {
     this.open();
     for (const file of files) {
       this.photoUploads.update((n) => n + 1);
+      const color = detectColor(file);
       this.api.upload(file).subscribe({
-        next: ({ url }) => {
+        next: async ({ url }) => {
+          const name = await color;
           this.photoUploads.update((n) => n - 1);
           // só entra no cadastro novo (se a gaveta foi fechada ou trocada por outro produto, a foto fica de fora)
-          this.draft.update((d) => (d && !d.id ? { ...d, images: [...d.images, url] } : d));
+          const d = this.draft();
+          if (!d || d.id) return;
+          this.draft.set({
+            ...d,
+            images: [...d.images, url],
+            image_colors: name ? { ...d.image_colors, [url]: name } : d.image_colors,
+          });
+          this.useDetectedColor(name);
         },
         error: (err) => {
           this.photoUploads.update((n) => n - 1);
@@ -316,6 +327,57 @@ export class Products extends CrudPage<Product> {
         },
       });
     }
+  }
+
+  /** cor reconhecida na foto vira um cartão de cor (null = foto sem cor reconhecida, vai para "Sem cor") */
+  private useDetectedColor(name: string | null) {
+    const list = this.colors();
+    if (list.includes(name)) return;
+    const onlyBlank = list.length === 1 && list[0] === null && !this.draft()?.variants.length;
+    // o cartão "Sem cor" vazio sai quando a primeira cor aparece, mas volta se alguma foto não tiver cor
+    const blankHasPhotos = this.photosOf(this.draft(), null).length > 0;
+    this.colors.set(onlyBlank && name && !blankHasPhotos ? [name] : [...list, name]);
+    if (name) this.toast.show(`Cor reconhecida: ${name}. Se não for, é só trocar o nome.`);
+  }
+
+  /** Planilha (.xlsx ou .csv) com um produto por linha; produtos entram escondidos até ganharem fotos. */
+  importSheet(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.importing.set(true);
+    this.api.importProducts(file).subscribe({
+      next: async ({ created, skipped, errors }) => {
+        this.importing.set(false);
+        this.load();
+        const lines = [
+          created.length ? `${created.length} produto(s) criado(s). Eles estão escondidos da loja: coloque as fotos e clique no olho para mostrar.` : '',
+          skipped.length ? `${skipped.length} já existiam e ficaram como estavam: ${skipped.slice(0, 5).join(', ')}${skipped.length > 5 ? '...' : ''}.` : '',
+          errors.length ? `Não entraram (corrija e importe de novo):\n• ${errors.slice(0, 10).join('\n• ')}${errors.length > 10 ? `\n...e mais ${errors.length - 10}` : ''}` : '',
+        ].filter(Boolean);
+        await this.confirm.ask({
+          title: created.length ? 'Planilha importada' : 'Nenhum produto novo',
+          message: lines.join('\n\n') || 'A planilha não tinha produtos.',
+          confirmLabel: 'Entendi',
+          alert: true,
+        });
+      },
+      error: (err) => {
+        this.importing.set(false);
+        this.toast.error(errorMessage(err));
+      },
+    });
+  }
+
+  downloadTemplate() {
+    this.api.importTemplate().subscribe((blob) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'modelo-produtos.csv';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
   }
 
   toggleActive(p: Product) {

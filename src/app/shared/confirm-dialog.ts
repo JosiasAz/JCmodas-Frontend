@@ -18,9 +18,11 @@ import { Icon } from './icon';
           @if (c.message) {
             <p id="confirm-message">{{ c.message }}</p>
           }
-          <div class="actions">
+          <div class="actions" [class.single]="c.alert">
             <!-- o foco começa em "Cancelar": um Enter sem querer não apaga nada -->
-            <button #cancel type="button" class="btn outline lg" (click)="confirm.answer(false)">{{ c.cancelLabel || 'Cancelar' }}</button>
+            @if (!c.alert) {
+              <button #cancel type="button" class="btn outline lg" (click)="confirm.answer(false)">{{ c.cancelLabel || 'Cancelar' }}</button>
+            }
             <button type="button" class="btn lg" [class.danger]="c.danger" (click)="confirm.answer(true)">{{ c.confirmLabel || 'Confirmar' }}</button>
           </div>
         </div>
@@ -38,8 +40,9 @@ import { Icon } from './icon';
       background: var(--sand); color: var(--ink);
       &.danger { background: var(--sale-soft); color: var(--sale); } }
     h2 { margin: 0; font-family: var(--font); font-size: 1.2rem; font-weight: 700; overflow-wrap: anywhere; }
-    p { margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
+    p { margin: 8px 0 0; color: var(--muted); line-height: 1.5; white-space: pre-line; max-height: 50vh; overflow-y: auto; }
     .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px;
+      &.single { grid-template-columns: 1fr; }
       .btn { width: 100%; padding: 0 12px; } }
   `,
 })
